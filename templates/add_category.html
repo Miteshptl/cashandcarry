@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Category — CnC{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="wrap">
+    <div style="max-width: 540px; margin: 0 auto; background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 32px;">
+      <span class="mono" style="font-size: 11px; color: var(--turmeric-dark); font-weight: 600; text-transform: uppercase;">Catalog Management</span>
+      <h1 class="display" style="font-size: 24px; color: var(--charcoal); margin-top: 2px; margin-bottom: 20px;">Add New Category</h1>
+
+      <form method="post" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 16px;">
+        {% csrf_token %}
+        <div>
+          <label style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--charcoal-soft); display: block; margin-bottom: 6px;">Category Name</label>
+          <input type="text" name="name" required placeholder="e.g. Fruits & Vegetables" style="width: 100%; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; outline: none; font-family: 'Inter';">
+        </div>
+
+        <div>
+          <label style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--charcoal-soft); display: block; margin-bottom: 6px;">Parent Category (Optional)</label>
+          <select name="parent_category" style="width: 100%; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; font-family: 'Inter'; font-weight: 500;">
+            <option value="">None (Top-Level Category)</option>
+            {% for cat in categories %}
+              <option value="{{ cat.id }}">{{ cat.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Category Image Upload Options -->
+        <div style="border: 1px dashed var(--line); border-radius: 12px; padding: 16px; background: var(--mist); display: flex; flex-direction: column; gap: 12px;">
+          <div>
+            <label style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--charcoal); display: block; margin-bottom: 4px;">Option A: Upload Local Image File</label>
+            <input type="file" name="image" accept="image/*" style="width: 100%; font-size: 13px;">
+          </div>
+
+          <div style="text-align: center; font-size: 11px; font-weight: 700; color: var(--charcoal-soft);" class="mono">— OR —</div>
+
+          <div>
+            <label style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--charcoal); display: block; margin-bottom: 4px;">Option B: External Image URL</label>
+            <input type="url" name="image_url" placeholder="https://images.unsplash.com/photo-..." style="width: 100%; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; outline: none; font-family: 'Inter';">
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 8px;">
+          <button type="submit" class="btn btn-primary" style="flex: 1; justify-content: center; padding: 12px;">Save Category</button>
+          <a href="{% url 'dashboard' %}" class="btn btn-secondary" style="padding: 12px 18px;">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}

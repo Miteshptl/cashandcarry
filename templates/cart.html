@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Your Cart — CnC{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="wrap">
+    <h1 class="display" style="font-size: 28px; margin-bottom: 24px;">Your Shopping Cart</h1>
+
+    <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 32px; align-items: start;">
+      
+      <!-- Cart List -->
+      <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px;">
+        <p style="color: var(--charcoal-soft); font-size: 14px;">Your cart is currently empty.</p>
+      </div>
+
+      <!-- Order Summary Card -->
+      <div class="mode-card">
+        <div class="mode-card-title">Order Summary</div>
+        
+        <div class="mode-detail">
+          <span class="label">Subtotal</span>
+          <span class="value mono">₹0.00</span>
+        </div>
+        <div class="mode-detail">
+          <span class="label">Delivery Fee</span>
+          <span class="value mono">₹29.00</span>
+        </div>
+        <div class="mode-detail" style="border-top: 1px solid var(--line); margin-top: 16px; padding-top: 16px;">
+          <span class="label" style="font-weight: 700; color: var(--charcoal);">Total Amount</span>
+          <span class="value mono" style="font-size: 18px; color: var(--leaf);">₹29.00</span>
+        </div>
+
+        <button class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 20px;">
+          Proceed to Checkout
+        </button>
+      </div>
+
+    </div>
+  </div>
+</section>
+{% endblock %}

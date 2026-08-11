@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Prices & Discounts — CnC{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="wrap">
+    
+    <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+      <div>
+        <span class="mono" style="font-size: 11px; color: var(--turmeric-dark); font-weight: 600; text-transform: uppercase;">Pricing Console</span>
+        <h1 class="display" style="font-size: 26px; color: var(--charcoal); margin-top: 2px;">Product Prices & Discounts</h1>
+      </div>
+      <a href="{% url 'dashboard' %}" class="btn btn-secondary" style="font-size: 13px;">← Back to Dashboard</a>
+    </div>
+
+    <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px; overflow-x: auto;">
+      <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
+        <thead>
+          <tr style="border-bottom: 2px solid var(--line); color: var(--charcoal-soft); text-transform: uppercase; font-size: 11px;" class="mono">
+            <th style="padding: 12px;">Product</th>
+            <th style="padding: 12px;">Brand</th>
+            <th style="padding: 12px;">Original Price (₹)</th>
+            <th style="padding: 12px;">Discounted Price (₹)</th>
+            <th style="padding: 12px; text-align: right;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for product in products %}
+          <tr style="border-bottom: 1px solid var(--line);">
+            <td style="padding: 14px; font-weight: 600;">{{ product.name }} <span style="font-size: 11px; color: var(--charcoal-soft);">({{ product.unit }})</span></td>
+            <td style="padding: 14px; color: var(--charcoal-soft);">{{ product.brand|default:"Generic" }}</td>
+            <form method="post">
+              {% csrf_token %}
+              <input type="hidden" name="product_id" value="{{ product.id }}">
+              <td style="padding: 14px;">
+                <input type="number" step="0.01" name="price" value="{{ product.price }}" style="width: 90px; padding: 6px; border: 1px solid var(--line); border-radius: 6px;" class="mono" required>
+              </td>
+              <td style="padding: 14px;">
+                <input type="number" step="0.01" name="discounted_price" value="{{ product.discounted_price|default:'' }}" placeholder="Optional" style="width: 90px; padding: 6px; border: 1px solid var(--line); border-radius: 6px;" class="mono">
+              </td>
+              <td style="padding: 14px; text-align: right;">
+                <button type="submit" class="btn btn-primary" style="padding: 6px 12px; font-size: 12px;">Save Price</button>
+              </td>
+            </form>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</section>
+{% endblock %}

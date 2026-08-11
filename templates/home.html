@@ -1,0 +1,253 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="wrap">
+      <div>
+        <div class="hero-eyebrow">Your neighbourhood supermarket, online</div>
+        <h1 class="display">Fresh groceries,<br>on your schedule.</h1>
+        <p>Order in the next 45 minutes for delivery within the hour, or schedule a free delivery slot for whenever suits you.</p>
+        <div class="hero-ctas">
+          <button class="btn btn-primary">Shop instant delivery</button>
+          <button class="btn btn-secondary">Schedule for later</button>
+        </div>
+        <div class="trust-strip">
+          <span>FSSAI LIC. 10023XXXXXXXXX</span>
+          <span>GSTIN VERIFIED SELLER</span>
+          <span>SECURE PAYMENTS VIA RAZORPAY</span>
+        </div>
+      </div>
+      <div class="mode-card">
+        <div class="mode-card-title">Choose delivery mode</div>
+        <div class="mode-toggle">
+          <div class="opt active">⚡ Instant · 20 min</div>
+          <div class="opt">📅 Scheduled · Free</div>
+        </div>
+        <div class="mode-detail">
+          <span class="label">Delivery fee</span>
+          <span class="value">₹29</span>
+        </div>
+        <div class="mode-detail">
+          <span class="label">Order cutoff today</span>
+          <span class="value">9:45 PM</span>
+        </div>
+        <div class="mode-detail">
+          <span class="label">Serving pincode</span>
+          <span class="value">400101</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Categories Section -->
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <h2 class="display">Shop by category</h2>
+        <a href="{% url 'category_list' %}">View all →</a>
+      </div>
+      <div class="cat-grid">
+        {% for category in categories %}
+        <div class="cat-tag">
+          <div class="cat-swatch" style="{% if category.get_image %}background-image: url('{{ category.get_image }}'); background-size: cover; background-position: center;{% else %}background:#DDEEDD;{% endif %}"></div>
+          <span>{{ category.name }}</span>
+        </div>
+        {% empty %}
+        <p style="color: var(--charcoal-soft); grid-column: 1 / -1;">No categories added yet.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <!-- Product Deals Section -->
+  <section class="band-mist">
+    <div class="section">
+      <div class="wrap">
+        <div class="section-head">
+          <h2 class="display">Today's deals</h2>
+          <a href="{% url 'product_list' %}">View all →</a>
+        </div>
+        <div class="product-grid">
+          {% for product in products %}
+          <div class="product-card">
+            <div class="product-media" style="background:#EAF3E4; {% if product.get_image %}background-image: url('{{ product.get_image }}'); background-size: cover; background-position: center;{% endif %}">
+              {% if product.discounted_price %}
+                <span class="product-tag">OFFER</span>
+              {% endif %}
+            </div>
+            <div class="product-body">
+              <div class="product-name">
+                <a href="{% url 'product_detail' product.id %}">{{ product.name }}</a>
+              </div>
+              <div class="product-unit">{{ product.unit }}</div>
+              <div class="product-footer">
+                <div class="product-price">
+                  {% if product.discounted_price %}
+                    <span class="strike">₹{{ product.price }}</span>₹{{ product.discounted_price }}
+                  {% else %}
+                    ₹{{ product.price }}
+                  {% endif %}
+                </div>
+                <button class="add-btn">+</button>
+              </div>
+            </div>
+          </div>
+          {% empty %}
+          <p style="color: var(--charcoal-soft); grid-column: 1 / -1;">No products available at the moment.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+{% comment %} {% extends 'base.html' %}
+
+{% block content %}
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="wrap">
+      <div>
+        <div class="hero-eyebrow">Your neighbourhood supermarket, online</div>
+        <h1 class="display">Fresh groceries,<br>on your schedule.</h1>
+        <p>Order in the next 45 minutes for delivery within the hour, or schedule a free delivery slot for whenever suits you.</p>
+        <div class="hero-ctas">
+          <button class="btn btn-primary">Shop instant delivery</button>
+          <button class="btn btn-secondary">Schedule for later</button>
+        </div>
+        <div class="trust-strip">
+          <span>FSSAI LIC. 10023XXXXXXXXX</span>
+          <span>GSTIN VERIFIED SELLER</span>
+          <span>SECURE PAYMENTS VIA RAZORPAY</span>
+        </div>
+      </div>
+      <div class="mode-card">
+        <div class="mode-card-title">Choose delivery mode</div>
+        <div class="mode-toggle">
+          <div class="opt active">⚡ Instant · 20 min</div>
+          <div class="opt">📅 Scheduled · Free</div>
+        </div>
+        <div class="mode-detail">
+          <span class="label">Delivery fee</span>
+          <span class="value">₹29</span>
+        </div>
+        <div class="mode-detail">
+          <span class="label">Order cutoff today</span>
+          <span class="value">9:45 PM</span>
+        </div>
+        <div class="mode-detail">
+          <span class="label">Serving pincode</span>
+          <span class="value">400001</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Categories Section -->
+  <section class="section">
+    <div class="wrap">
+      <div class="section-head">
+        <h2 class="display">Shop by category</h2>
+        <a href="{% url 'category_list' %}">View all →</a>
+      </div>
+      <div class="cat-grid">
+        {% for category in categories %}
+        <div class="cat-tag">
+          <div class="cat-swatch" style="background:#DDEEDD"></div>
+          <span>{{ category.name }}</span>
+        </div>
+        {% empty %}
+        <!-- Fallback to default design tags if database is empty -->
+        <div class="cat-tag"><div class="cat-swatch" style="background:#DDEEDD"></div><span>Fruits &amp; Veg</span></div>
+        <div class="cat-tag"><div class="cat-swatch" style="background:#FDEBD3"></div><span>Dairy &amp; Eggs</span></div>
+        <div class="cat-tag"><div class="cat-swatch" style="background:#F3E2C7"></div><span>Bakery</span></div>
+        <div class="cat-tag"><div class="cat-swatch" style="background:#E9E0CE"></div><span>Atta, Rice &amp; Dal</span></div>
+        <div class="cat-tag"><div class="cat-swatch" style="background:#F6DCD2"></div><span>Snacks</span></div>
+        <div class="cat-tag"><div class="cat-swatch" style="background:#DCEAF0"></div><span>Beverages</span></div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <!-- Product Deals Section -->
+  <section class="band-mist">
+    <div class="section">
+      <div class="wrap">
+        <div class="section-head">
+          <h2 class="display">Today's deals</h2>
+          <a href="{% url 'product_list' %}">View all →</a>
+        </div>
+        <div class="product-grid">
+          {% for product in products %}
+          <div class="product-card">
+            <div class="product-media" style="background:#EAF3E4; {% if product.image_url %}background-image: url('{{ product.image_url }}');{% endif %}">
+              {% if product.discounted_price %}
+                <span class="product-tag">OFFER</span>
+              {% endif %}
+            </div>
+            <div class="product-body">
+              <div class="product-name">
+                <a href="{% url 'product_detail' product.id %}">{{ product.name }}</a>
+              </div>
+              <div class="product-unit">{{ product.unit }}</div>
+              <div class="product-footer">
+                <div class="product-price">
+                  {% if product.discounted_price %}
+                    <span class="strike">₹{{ product.price }}</span>₹{{ product.discounted_price }}
+                  {% else %}
+                    ₹{{ product.price }}
+                  {% endif %}
+                </div>
+                <button class="add-btn">+</button>
+              </div>
+            </div>
+          </div>
+          {% empty %}
+          <!-- Fallback Cards if database is empty -->
+          <div class="product-card">
+            <div class="product-media" style="background:#EAF3E4;"><span class="product-tag">20% OFF</span></div>
+            <div class="product-body">
+              <div class="product-name">Tomatoes</div>
+              <div class="product-unit">1 kg, local</div>
+              <div class="product-footer">
+                <div class="product-price"><span class="strike">₹50</span>₹40</div>
+                <button class="add-btn">+</button>
+              </div>
+            </div>
+          </div>
+          <div class="product-card">
+            <div class="product-media" style="background:#FDF1DC;"><span class="product-tag">10% OFF</span></div>
+            <div class="product-body">
+              <div class="product-name">Amul Toned Milk</div>
+              <div class="product-unit">500 ml pouch</div>
+              <div class="product-footer">
+                <div class="product-price"><span class="strike">₹28</span>₹25</div>
+                <button class="add-btn">+</button>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </section>
+{% endblock %} {% endcomment %}
+

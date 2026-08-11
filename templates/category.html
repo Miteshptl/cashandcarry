@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}Categories — CnC{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="wrap">
+    <div class="section-head">
+      <h1 class="display">Shop by Category</h1>
+    </div>
+    
+    <div class="cat-grid">
+      {% for category in categories %}
+      <div class="cat-tag">
+        <div class="cat-swatch" style="{% if category.get_image %}background-image: url('{{ category.get_image }}'); background-size: cover; background-position: center;{% else %}background:#DDEEDD;{% endif %}"></div>
+        <span>{{ category.name }}</span>
+      </div>
+      {% empty %}
+      <p style="color: var(--charcoal-soft);">No categories found in the database.</p>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

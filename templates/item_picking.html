@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}Picking & Substitutions — CnC{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="wrap">
+    
+    <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center;">
+      <div>
+        <span class="mono" style="font-size: 11px; color: var(--turmeric-dark); font-weight: 600; text-transform: uppercase;">Floor Operations</span>
+        <h1 class="display" style="font-size: 26px; color: var(--charcoal); margin-top: 2px;">Item Picking & Substitutions</h1>
+      </div>
+      <a href="{% url 'dashboard' %}" class="btn btn-secondary" style="font-size: 13px;">← Back to Dashboard</a>
+    </div>
+
+    <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px;">
+      <h2 class="display" style="font-size: 18px; margin-bottom: 16px;">Pending Items to Pick</h2>
+
+      <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
+        <thead>
+          <tr style="border-bottom: 2px solid var(--line); color: var(--charcoal-soft); text-transform: uppercase; font-size: 11px;" class="mono">
+            <th style="padding: 12px;">Order ID</th>
+            <th style="padding: 12px;">Item Name</th>
+            <th style="padding: 12px;">Qty Needed</th>
+            <th style="padding: 12px;">Picking Status</th>
+            <th style="padding: 12px; text-align: right;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in order_items %}
+          <tr style="border-bottom: 1px solid var(--line);">
+            <td style="padding: 14px;" class="mono font-bold">#{{ item.order.id }}</td>
+            <td style="padding: 14px; font-weight: 600;">{{ item.product.name }}</td>
+            <td style="padding: 14px;" class="mono">{{ item.quantity }}</td>
+            <td style="padding: 14px;">
+              <span class="mono" style="font-size: 11px; background: var(--mist); border: 1px solid var(--line); padding: 4px 8px; border-radius: 4px;">
+                {{ item.get_fulfillment_status_display }}
+              </span>
+            </td>
+            <td style="padding: 14px; text-align: right;">
+              <form method="post" style="display: inline-flex; gap: 6px;">
+                {% csrf_token %}
+                <input type="hidden" name="item_id" value="{{ item.id }}">
+                <button type="submit" name="action" value="picked" class="btn btn-primary" style="padding: 6px 10px; font-size: 11px;">Mark Picked</button>
+                <button type="submit" name="action" value="out_of_stock" class="btn btn-secondary" style="border-color: var(--chili); color: var(--chili); padding: 6px 10px; font-size: 11px;">Out of Stock</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</section>
+{% endblock %}

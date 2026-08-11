@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Account — CnC{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="wrap">
+    <div style="max-width: 480px; margin: 0 auto; background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 32px;">
+      
+      <!-- Header -->
+      <div style="text-align: center; margin-bottom: 24px;">
+        <span class="mono" style="font-size: 11px; color: var(--turmeric-dark); font-weight: 600; text-transform: uppercase;">Join CnC Supermarket</span>
+        <h1 class="display" style="font-size: 26px; color: var(--charcoal); margin-top: 2px;">Create an Account</h1>
+        <p style="font-size: 13px; color: var(--charcoal-soft); margin-top: 4px;">
+          Sign up for 20-minute instant deliveries and scheduled grocery slots.
+        </p>
+      </div>
+
+      <!-- Registration Form -->
+      <form method="post" style="display: flex; flex-direction: column; gap: 16px;">
+        {% csrf_token %}
+
+        {% if form.errors %}
+          <div style="background: rgba(216, 73, 46, 0.1); border: 1px solid var(--chili); color: var(--chili); padding: 10px 14px; border-radius: 8px; font-size: 13px;">
+            {% for field in form %}
+              {% for error in field.errors %}
+                <p>• {{ field.label }}: {{ error }}</p>
+              {% endfor %}
+            {% endfor %}
+            {% for error in form.non_field_errors %}
+              <p>• {{ error }}</p>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        <div>
+          <label style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--charcoal-soft); display: block; margin-bottom: 6px;">Username</label>
+          <input 
+            type="text" 
+            name="username" 
+            required 
+            placeholder="Choose a username" 
+            style="width: 100%; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; outline: none; font-family: 'Inter';"
+          >
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div>
+            <label style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--charcoal-soft); display: block; margin-bottom: 6px;">Phone Number</label>
+            <input 
+              type="tel" 
+              name="phone" 
+              placeholder="9876543210" 
+              style="width: 100%; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; outline: none; font-family: 'Inter';"
+            >
+          </div>
+          <div>
+            <label style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--charcoal-soft); display: block; margin-bottom: 6px;">Email (Optional)</label>
+            <input 
+              type="email" 
+              name="email" 
+              placeholder="you@example.com" 
+              style="width: 100%; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; outline: none; font-family: 'Inter';"
+            >
+          </div>
+        </div>
+
+        <div>
+          <label style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--charcoal-soft); display: block; margin-bottom: 6px;">Password</label>
+          <input 
+            type="password" 
+            name="password1" 
+            required 
+            placeholder="••••••••" 
+            style="width: 100%; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; outline: none; font-family: 'Inter';"
+          >
+        </div>
+
+        <div>
+          <label style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--charcoal-soft); display: block; margin-bottom: 6px;">Confirm Password</label>
+          <input 
+            type="password" 
+            name="password2" 
+            required 
+            placeholder="••••••••" 
+            style="width: 100%; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; outline: none; font-family: 'Inter';"
+          >
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="justify-content: center; padding: 12px; font-size: 14px; margin-top: 4px;">
+          Create Account
+        </button>
+      </form>
+
+      <!-- Footer / Switch to Login -->
+      <div style="text-align: center; margin-top: 24px; padding-top: 16px; border-top: 1px dashed var(--line); font-size: 13px; color: var(--charcoal-soft);">
+        Already have an account? <a href="{% url 'login' %}" style="color: var(--leaf); font-weight: 600;">Log In</a>
+      </div>
+
+    </div>
+  </div>
+</section>
+{% endblock %}

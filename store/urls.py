@@ -1,0 +1,61 @@
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    # path('', views.home, name='home'),
+    # path('categories/', views.category_list, name='category_list'),
+    # path('products/', views.product_list, name='product_list'),
+    # path('products/<int:pk>/', views.product_detail, name='product_detail'),
+    # path('cart/', views.cart, name='cart'),
+    # path('refund-request/', views.refund_request, name='refund'),
+    # path('privacy-policy/', views.privacy_policy, name='privacy'),
+    # path('terms/', views.terms_and_conditions, name='terms'),
+    # path('refunds-policy/', views.refunds_policy, name='refunds_policy'),
+    # path('returns/', views.returns_policy, name='returns'),
+    # path('about/', views.about_us, name='about'),
+    # path('shipping_policy/', views.shipping_policy, name='shipping_policy'),
+    # path('contact/', views.contact, name='contact'),
+    # path('profile/', views.profile, name='profile'),
+    # path('dashboard/', views.dashboard, name='dashboard'),
+    # path('manage/inventory/', views.manage_inventory, name='manage_inventory'),
+    # path('manage/prices/', views.manage_prices, name='manage_prices'),
+    # path('manage/coupons/', views.manage_coupons, name='manage_coupons'),
+    # path('manage/bulk-import/', views.bulk_import, name='bulk_import'),
+    # path('manage/staff/', views.manage_staff, name='manage_staff'),
+    # path('manage/live-orders/', views.live_orders, name='live_orders'),
+    # path('manage/item-picking/', views.item_picking, name='item_picking'),
+    # path('manage/store-settings/', views.store_settings, name='store_settings'),
+    # path('manage/audit-logs/', views.audit_logs, name='audit_logs'),
+
+
+# Public & Customer Pages
+    path('', views.home, name='home'),
+    path('categories/', views.category_list, name='category_list'),
+    path('products/', views.product_list, name='product_list'),
+    path('products/<int:pk>/', views.product_detail, name='product_detail'),
+    path('cart/', views.cart, name='cart'),
+    path('refund-request/', views.refund_request, name='refund'),
+    path('privacy-policy/', views.privacy_policy, name='privacy'),
+    path('terms/', views.terms_and_conditions, name='terms'),
+    path('refunds-policy/', views.refunds_policy, name='refunds_policy'),
+    path('returns/', views.returns_policy, name='returns'),
+    path('shipping-policy/', views.shipping_policy, name='shipping_policy'),
+    path('about/', views.about_us, name='about'),
+    path('contact/', views.contact, name='contact'),
+    path('profile/', views.profile, name='profile'),
+
+    # Internal Management Pages
+    path('dashboard/', views.dashboard, name='dashboard'),
+    path('manage/add-category/', views.add_category, name='add_category'),
+    path('manage/add-product/', views.add_product, name='add_product'),
+    path('manage/inventory/', views.manage_inventory, name='manage_inventory'),
+    path('manage/prices/', views.manage_prices, name='manage_prices'),
+    path('manage/coupons/', views.manage_coupons, name='manage_coupons'),
+    path('manage/bulk-import/', views.bulk_import, name='bulk_import'),
+    path('manage/staff/', views.manage_staff, name='manage_staff'),
+    path('manage/live-orders/', views.live_orders, name='live_orders'),
+    path('manage/item-picking/', views.item_picking, name='item_picking'),
+    path('manage/store-settings/', views.store_settings, name='store_settings'),
+    path('manage/audit-logs/', views.audit_logs, name='audit_logs'),
+]
+

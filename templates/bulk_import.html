@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}Bulk Import Products — CnC{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="wrap">
+    
+    <div style="max-width: 600px; margin: 0 auto; background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 32px;">
+      <span class="mono" style="font-size: 11px; color: var(--turmeric-dark); font-weight: 600; text-transform: uppercase;">Catalog Automation</span>
+      <h1 class="display" style="font-size: 24px; color: var(--charcoal); margin-top: 2px; margin-bottom: 8px;">Bulk Product Import</h1>
+      <p style="font-size: 13px; color: var(--charcoal-soft); margin-bottom: 24px;">
+        Upload a structured CSV or Excel spreadsheet URL to batch import catalog items, prices, and stock counts.
+      </p>
+
+      <form method="post" style="display: flex; flex-direction: column; gap: 16px;">
+        {% csrf_token %}
+        <div>
+          <label style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--charcoal-soft); display: block; margin-bottom: 6px;">CSV File URL</label>
+          <input type="url" name="file_url" required placeholder="https://storage.googleapis.com/catalog.csv" style="width: 100%; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; font-size: 13px; outline: none;">
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="justify-content: center; padding: 12px;">Start Import Job</button>
+      </form>
+
+      <!-- Past Jobs -->
+      <div style="margin-top: 32px; border-top: 1px solid var(--line); padding-top: 20px;">
+        <h3 class="display" style="font-size: 16px; margin-bottom: 12px;">Recent Import Jobs</h3>
+        <div style="display: flex; flex-direction: column; gap: 8px; font-size: 12px;">
+          {% for job in import_jobs %}
+          <div style="padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--mist);" class="mono">
+            Job #{{ job.id }} — Status: <strong>{{ job.status }}</strong> (Success: {{ job.success_count }} | Errors: {{ job.error_count }})
+          </div>
+          {% empty %}
+          <p style="color: var(--charcoal-soft); font-size: 12px;">No past import jobs.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+{% endblock %}

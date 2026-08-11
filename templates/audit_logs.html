@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}Security Audit Logs — CnC{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="wrap">
+    
+    <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center;">
+      <div>
+        <span class="mono" style="font-size: 11px; color: var(--chili); font-weight: 600; text-transform: uppercase;">ADMIN ONLY</span>
+        <h1 class="display" style="font-size: 26px; color: var(--charcoal); margin-top: 2px;">Security & Action Audit Logs</h1>
+      </div>
+      <a href="{% url 'dashboard' %}" class="btn btn-secondary" style="font-size: 13px;">← Back to Dashboard</a>
+    </div>
+
+    <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px; overflow-x: auto;">
+      <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 12px;">
+        <thead>
+          <tr style="border-bottom: 2px solid var(--line); color: var(--charcoal-soft); text-transform: uppercase;" class="mono">
+            <th style="padding: 10px;">Timestamp</th>
+            <th style="padding: 10px;">User</th>
+            <th style="padding: 10px;">Action</th>
+            <th style="padding: 10px;">Entity</th>
+            <th style="padding: 10px;">Field</th>
+            <th style="padding: 10px;">Old Value</th>
+            <th style="padding: 10px;">New Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in audit_logs %}
+          <tr style="border-bottom: 1px solid var(--line);" class="mono">
+            <td style="padding: 12px; color: var(--charcoal-soft);">{{ log.created_at|date:"Y-m-d H:i:s" }}</td>
+            <td style="padding: 12px; font-weight: 600;">{{ log.user.username|default:"System" }}</td>
+            <td style="padding: 12px;"><span style="background: var(--mist); border: 1px solid var(--line); padding: 2px 6px; border-radius: 4px;">{{ log.action }}</span></td>
+            <td style="padding: 12px;">{{ log.entity_type }} #{{ log.entity_id }}</td>
+            <td style="padding: 12px;">{{ log.field_changed|default:"—" }}</td>
+            <td style="padding: 12px; color: var(--chili);">{{ log.old_value|default:"—" }}</td>
+            <td style="padding: 12px; color: var(--leaf);">{{ log.new_value|default:"—" }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="7" style="padding: 20px; text-align: center; color: var(--charcoal-soft);">No security logs recorded.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</section>
+{% endblock %}

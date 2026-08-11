@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}All Products — CnC{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="wrap">
+    <div class="section-head">
+      <h1 class="display">All Products</h1>
+    </div>
+
+    <div class="product-grid">
+      {% for product in products %}
+      <div class="product-card">
+        <div class="product-media" style="background:#EAF3E4; {% if product.image_url %}background-image: url('{{ product.image_url }}');{% endif %}">
+          {% if product.discounted_price %}
+            <span class="product-tag">OFFER</span>
+          {% endif %}
+        </div>
+        <div class="product-body">
+          <div class="product-name">
+            <a href="{% url 'product_detail' product.id %}">{{ product.name }}</a>
+          </div>
+          <div class="product-unit">{{ product.unit }}</div>
+          <div class="product-footer">
+            <div class="product-price">
+              {% if product.discounted_price %}
+                <span class="strike">₹{{ product.price }}</span>₹{{ product.discounted_price }}
+              {% else %}
+                ₹{{ product.price }}
+              {% endif %}
+            </div>
+            <button class="add-btn">+</button>
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <p style="color: var(--charcoal-soft);">No products available.</p>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}

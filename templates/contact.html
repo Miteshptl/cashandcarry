@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block title %}Contact & Support — CnC{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="wrap">
+    
+    <!-- Section Header -->
+    <div style="text-align: center; max-width: 600px; margin: 0 auto 36px auto;">
+      <span class="mono" style="font-size: 12px; color: var(--turmeric-dark); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Customer Care</span>
+      <h1 class="display" style="font-size: 32px; color: var(--charcoal); margin-top: 4px;">Get in touch with us</h1>
+      <p style="font-size: 14px; color: var(--charcoal-soft); margin-top: 8px;">
+        Have a question about an order, delivery slot, or payment? We're here to help you daily during store hours.
+      </p>
+    </div>
+
+    <!-- Main 2-Column Grid -->
+    <div style="display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 32px; align-items: start;">
+      
+      <!-- Left Column: Store Details -->
+      <div style="display: flex; flex-direction: column; gap: 16px;">
+        
+        <!-- Operating Hours Card -->
+        <div class="mode-card">
+          <div class="mode-card-title">Store & Support Hours</div>
+          <div class="mode-detail">
+            <span class="label">Operating Days</span>
+            <span class="value">Open Daily (Mon - Sun)</span>
+          </div>
+          <div class="mode-detail">
+            <span class="label">Delivery Hours</span>
+            <span class="value">9:00 AM – 10:00 PM</span>
+          </div>
+          <div class="mode-detail">
+            <span class="label">Instant Order Cutoff</span>
+            <span class="value">9:45 PM</span>
+          </div>
+        </div>
+
+        <!-- Contact Information Card -->
+        <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px;">
+          <h3 class="display" style="font-size: 18px; color: var(--leaf); margin-bottom: 16px;">Registered Office</h3>
+          
+          <div style="display: flex; flex-direction: column; gap: 12px; font-size: 13px; color: var(--charcoal-soft);">
+            <div>
+              <strong style="color: var(--charcoal); display: block;">Address</strong>
+              <span>CnC Supermarket Hub, Fort, Mumbai, Maharashtra 400001, India</span>
+            </div>
+            
+            <div style="border-top: 1px dashed var(--line); padding-top: 10px;">
+              <strong style="color: var(--charcoal); display: block;">Email Support</strong>
+              <span>support@cncsupermarket.com</span>
+            </div>
+
+            <div style="border-top: 1px dashed var(--line); padding-top: 10px;">
+              <strong style="color: var(--charcoal); display: block;">Grievance & Business Enquiries</strong>
+              <span>care@cncsupermarket.com</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right Column: Contact Form -->
+      <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 32px;">
+        <h2 class="display" style="font-size: 22px; margin-bottom: 6px;">Send us a message</h2>
+        <p style="font-size: 13px; color: var(--charcoal-soft); margin-bottom: 24px;">
+          Fill out the form below and our store support team will respond shortly.
+        </p>
+
+        <form method="post" style="display: flex; flex-direction: column; gap: 16px;">
+          {% csrf_token %}
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div>
+              <label style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--charcoal-soft); display: block; margin-bottom: 6px;">Your Name</label>
+              <input type="text" name="name" required placeholder="John Doe" style="width: 100%; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; outline: none; font-family: 'Inter', sans-serif;">
+            </div>
+
+            <div>
+              <label style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--charcoal-soft); display: block; margin-bottom: 6px;">Phone Number</label>
+              <input type="tel" name="phone" required placeholder="9876543210" style="width: 100%; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; outline: none; font-family: 'Inter', sans-serif;">
+            </div>
+          </div>
+
+          <div>
+            <label style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--charcoal-soft); display: block; margin-bottom: 6px;">Email Address</label>
+            <input type="email" name="email" required placeholder="john@example.com" style="width: 100%; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; outline: none; font-family: 'Inter', sans-serif;">
+          </div>
+
+          <div>
+            <label style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--charcoal-soft); display: block; margin-bottom: 6px;">Order ID (Optional)</label>
+            <input type="text" name="order_id" placeholder="e.g. #1042" style="width: 100%; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; outline: none; font-family: 'Inter', sans-serif;">
+          </div>
+
+          <div>
+            <label style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--charcoal-soft); display: block; margin-bottom: 6px;">Message</label>
+            <textarea name="message" rows="4" required placeholder="How can we help you?" style="width: 100%; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; outline: none; font-family: 'Inter', sans-serif;"></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="justify-content: center; padding: 12px;">
+            Send Message
+          </button>
+        </form>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+{% endblock %}

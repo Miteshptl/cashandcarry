@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Inventory — CnC{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="wrap">
+    
+    <!-- Header -->
+    <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+      <div>
+        <span class="mono" style="font-size: 11px; color: var(--turmeric-dark); font-weight: 600; text-transform: uppercase;">Stock Control</span>
+        <h1 class="display" style="font-size: 26px; color: var(--charcoal); margin-top: 2px;">Product Stock & Inventory</h1>
+      </div>
+      <a href="{% url 'dashboard' %}" class="btn btn-secondary" style="font-size: 13px;">← Back to Dashboard</a>
+    </div>
+
+    <!-- Inventory Table Card -->
+    <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px; overflow-x: auto;">
+      <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
+        <thead>
+          <tr style="border-bottom: 2px solid var(--line); color: var(--charcoal-soft); text-transform: uppercase; font-size: 11px;" class="mono">
+            <th style="padding: 12px;">Product Name</th>
+            <th style="padding: 12px;">Category</th>
+            <th style="padding: 12px;">Available Qty</th>
+            <th style="padding: 12px;">Status</th>
+            <th style="padding: 12px; text-align: right;">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in inventory_items %}
+          <tr style="border-bottom: 1px solid var(--line);">
+            <td style="padding: 14px; font-weight: 600;">{{ item.product.name }}</td>
+            <td style="padding: 14px; color: var(--charcoal-soft);">{{ item.product.category.name }}</td>
+            <td style="padding: 14px;" class="mono font-bold">{{ item.available_quantity }}</td>
+            <td style="padding: 14px;">
+              {% if item.available_quantity < 5 %}
+                <span class="mono" style="font-size: 10px; background: rgba(216, 73, 46, 0.1); color: var(--chili); padding: 4px 8px; border-radius: 4px; font-weight: 600;">LOW STOCK</span>
+              {% else %}
+                <span class="mono" style="font-size: 10px; background: rgba(47, 107, 79, 0.1); color: var(--leaf); padding: 4px 8px; border-radius: 4px; font-weight: 600;">IN STOCK</span>
+              {% endif %}
+            </td>
+            <td style="padding: 14px; text-align: right;">
+              <form method="post" style="display: inline-flex; gap: 6px; align-items: center;">
+                {% csrf_token %}
+                <input type="hidden" name="product_id" value="{{ item.product.id }}">
+                <input type="number" name="quantity" value="{{ item.available_quantity }}" min="0" style="width: 70px; padding: 6px; border: 1px solid var(--line); border-radius: 6px; font-family: 'IBM Plex Mono';" required>
+                <button type="submit" class="btn btn-primary" style="padding: 6px 12px; font-size: 12px;">Update</button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="5" style="padding: 20px; text-align: center; color: var(--charcoal-soft);">No inventory records found.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</section>
+{% endblock %}

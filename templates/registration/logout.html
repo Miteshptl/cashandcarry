@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+
+{% block title %}Confirm Log Out — CnC{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="wrap">
+    <div style="max-width: 420px; margin: 0 auto; background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 32px; text-align: center;">
+      
+      <span class="mono" style="font-size: 11px; color: var(--chili); font-weight: 600; text-transform: uppercase;">
+        Account Action
+      </span>
+      <h1 class="display" style="font-size: 24px; color: var(--charcoal); margin-top: 4px; margin-bottom: 8px;">
+        Are you sure you want to log out?
+      </h1>
+      <p style="font-size: 13px; color: var(--charcoal-soft); margin-bottom: 24px;">
+        Logging out will end your current session on this device.
+      </p>
+
+      <form method="post" action="{% url 'logout' %}" style="display: flex; flex-direction: column; gap: 10px;">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary" style="background: var(--chili); color: var(--white); justify-content: center; padding: 12px; font-size: 14px;">
+          Yes, Log Out
+        </button>
+        <a href="{% url 'profile' %}" class="btn btn-secondary" style="justify-content: center; padding: 12px; font-size: 14px; color: var(--charcoal-soft);">
+          Cancel and Stay Logged In
+        </a>
+      </form>
+
+    </div>
+  </div>
+</section>
+{% endblock %}

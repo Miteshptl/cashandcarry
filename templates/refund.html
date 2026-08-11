@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}Request Order Refund — CnC{% endblock %}
+
+{% block content %}
+<section class="section">
+  <div class="wrap">
+    <div style="max-width: 540px; margin: 0 auto; background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 32px;">
+      
+      <!-- Section Header -->
+      <div style="margin-bottom: 24px;">
+        <span class="mono" style="font-size: 12px; color: var(--turmeric-dark); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Order Assistance</span>
+        <h1 class="display" style="font-size: 26px; color: var(--charcoal); margin-top: 4px;">Request Order Refund</h1>
+        <p style="font-size: 13px; color: var(--charcoal-soft); margin-top: 6px;">
+          Enter your details below to submit a formal refund request for processed or damaged orders.
+        </p>
+      </div>
+
+      <!-- Refund Form -->
+      <form method="post" style="display: flex; flex-direction: column; gap: 18px;">
+        {% csrf_token %}
+        
+        <div>
+          <label style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--charcoal-soft); display: block; margin-bottom: 6px;">
+            Order ID
+          </label>
+          <input 
+            type="text" 
+            name="order_id" 
+            required 
+            placeholder="e.g. #1042" 
+            style="width: 100%; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; outline: none; font-family: 'Inter', sans-serif; font-size: 14px;"
+          >
+        </div>
+
+        <div>
+          <label style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--charcoal-soft); display: block; margin-bottom: 6px;">
+            Reason for Refund
+          </label>
+          <textarea 
+            name="reason" 
+            rows="4" 
+            required 
+            placeholder="Please specify if items were missing, damaged, or quality issues..." 
+            style="width: 100%; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; outline: none; font-family: 'Inter', sans-serif; font-size: 14px; line-height: 1.5;"
+          ></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="justify-content: center; padding: 12px; font-size: 14px;">
+          Submit Refund Request
+        </button>
+      </form>
+
+    </div>
+  </div>
+</section>
+{% endblock %}
