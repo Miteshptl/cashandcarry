@@ -911,3 +911,182 @@ def audit_logs(request):
 
     logs = AuditLog.objects.select_related('user').all().order_by('-created_at')[:50]
     return render(request, 'audit_logs.html', {'audit_logs': logs})
+
+
+
+
+
+
+
+
+
+
+
+    from django.shortcuts import render, redirect, get_object_or_404
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+import json
+
+from .models import Product, Category, Order, OrderItem, Address, Inventory
+
+# ==========================================
+# CART HELPER FUNCTIONS & API VIEWS
+# ==========================================
+
+def _get_cart(request):
+    """Retrieve or initialize session cart."""
+    return request.session.get('cart', {})
+
+def cart(request):
+    """Shopping cart page with item details and totals."""
+    cart_data = _get_cart(request)
+    cart_items = []
+    subtotal = 0
+
+    for product_id, item in cart_data.items():
+        product = Product.objects.filter(pk=product_id).first()
+        if product:
+            item_total = float(product.price if not product.discounted_price else product.discounted_price) * item['quantity']
+            subtotal += item_total
+            cart_items.append({
+                'product': product,
+                'quantity': item['quantity'],
+                'item_total': item_total,
+            })
+
+    delivery_fee = 29 if subtotal < 500 and subtotal > 0 else 0
+    grand_total = subtotal + delivery_fee
+
+    context = {
+        'cart_items': cart_items,
+        'subtotal': subtotal,
+        'delivery_fee': delivery_fee,
+        'grand_total': grand_total,
+    }
+    return render(request, 'cart.html', context)
+
+
+def add_to_cart(request):
+    """AJAX view to add or update item in cart."""
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        product_id = str(data.get('product_id'))
+        quantity = int(data.get('quantity', 1))
+
+        product = get_object_or_404(Product, pk=product_id)
+        cart = request.session.get('cart', {})
+
+        if product_id in cart:
+            cart[product_id]['quantity'] += quantity
+        else:
+            cart[product_id] = {
+                'name': product.name,
+                'price': str(product.discounted_price or product.price),
+                'quantity': quantity
+            }
+
+        request.session['cart'] = cart
+        total_items = sum(item['quantity'] for item in cart.values())
+
+        return JsonResponse({'status': 'success', 'cart_count': total_items, 'message': f'{product.name} added to cart.'})
+    
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)
+
+
+def update_cart_quantity(request):
+    """Update or remove specific item in cart."""
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        product_id = str(data.get('product_id'))
+        action = data.get('action') # 'increase', 'decrease', or 'remove'
+
+        cart = request.session.get('cart', {})
+
+        if product_id in cart:
+            if action == 'increase':
+                cart[product_id]['quantity'] += 1
+            elif action == 'decrease':
+                cart[product_id]['quantity'] -= 1
+                if cart[product_id]['quantity'] <= 0:
+                    del cart[product_id]
+            elif action == 'remove':
+                del cart[product_id]
+
+            request.session['cart'] = cart
+
+        total_items = sum(item['quantity'] for item in cart.values())
+        return JsonResponse({'status': 'success', 'cart_count': total_items})
+
+    return JsonResponse({'status': 'error'}, status=400)
+
+
+# ==========================================
+# CHECKOUT & ORDER PLACEMENT
+# ==========================================
+
+@login_required
+def checkout(request):
+    """Checkout view to select delivery address and confirm order."""
+    cart_data = _get_cart(request)
+    if not cart_data:
+        messages.warning(request, "Your cart is empty.")
+        return redirect('product_list')
+
+    user_addresses = Address.objects.filter(user=request.user)
+
+    if request.method == 'POST':
+        address_id = request.POST.get('address_id')
+        payment_method = request.POST.get('payment_method', 'COD')
+        delivery_mode = request.POST.get('delivery_mode', 'instant')
+
+        address = get_object_or_404(Address, pk=address_id, user=request.user)
+
+        # Calculate totals
+        subtotal = 0
+        items_to_create = []
+
+        for prod_id, item in cart_data.items():
+            product = Product.objects.get(pk=prod_id)
+            unit_price = product.discounted_price or product.price
+            item_total = unit_price * item['quantity']
+            subtotal += item_total
+            items_to_create.append((product, item['quantity'], unit_price))
+
+        delivery_fee = 29 if subtotal < 500 else 0
+        total_amount = subtotal + delivery_fee
+
+        # Create Order
+        order = Order.objects.create(
+            user=request.user,
+            address=address,
+            delivery_mode=delivery_mode,
+            payment_method=payment_method,
+            total_amount=total_amount,
+            order_status='pending_acceptance'
+        )
+
+        # Create OrderItems
+        for product, qty, price in items_to_create:
+            OrderItem.objects.create(
+                order=order,
+                product=product,
+                quantity=qty,
+                unit_price=price,
+                total_price=price * qty
+            )
+
+        # Clear session cart
+        request.session['cart'] = {}
+
+        messages.success(request, f"Order #{order.id} placed successfully!")
+        return redirect('order_success', order_id=order.id)
+
+    return render(request, 'checkout.html', {'addresses': user_addresses, 'cart_data': cart_data})
+
+
+@login_required
+def order_success(request, order_id):
+    """Order confirmation page."""
+    order = get_object_or_404(Order, pk=order_id, user=request.user)
+    return render(request, 'order_success.html', {'order': order})

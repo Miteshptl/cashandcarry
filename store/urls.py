@@ -44,6 +44,14 @@ urlpatterns = [
     path('contact/', views.contact, name='contact'),
     path('profile/', views.profile, name='profile'),
 
+    # AJAX Cart Routes
+    path('api/cart/add/', views.add_to_cart, name='add_to_cart'),
+    path('api/cart/update/', views.update_cart_quantity, name='update_cart_quantity'),
+    
+    # Checkout Flow
+    path('checkout/', views.checkout, name='checkout'),
+    path('order-success/<int:order_id>/', views.order_success, name='order_success'),
+
     # Internal Management Pages
     path('dashboard/', views.dashboard, name='dashboard'),
     path('manage/add-category/', views.add_category, name='add_category'),
