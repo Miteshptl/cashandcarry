@@ -1338,7 +1338,7 @@
 import csv
 import io
 import json
-import pandas as pd
+# import pandas as pd
 import requests
 
 from django.shortcuts import render, redirect, get_object_or_404
