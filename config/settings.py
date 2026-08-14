@@ -32,7 +32,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 # 1. SECURITY CONFIGURATION
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-replace-this-in-production!')
+# In config/settings.py
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-cnc-supermarket-prod-key-2026')
+
 DEBUG = True
 # ALLOWED_HOSTS = os.environ.get('DJANGO_ALLOWED_HOSTS', '*').split(',')
 ALLOWED_HOSTS = ['.vercel.app', '127.0.0.1', 'localhost', '*']
@@ -152,6 +154,14 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
 
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+    },
+}
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
