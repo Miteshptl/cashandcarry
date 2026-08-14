@@ -2,20 +2,79 @@
 
 {% block title %}Request Return &amp; Refund — CnC Supermarket{% endblock %}
 
+{% block extra_css %}
+<style>
+  .refund-grid-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+  @media (min-width: 768px) {
+    .refund-grid-layout {
+      grid-template-columns: 1.4fr 1fr;
+      gap: 28px;
+    }
+  }
+
+  .refund-card {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 16px;
+  }
+  @media (min-width: 600px) {
+    .refund-card {
+      padding: 24px;
+    }
+  }
+
+  .refund-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-size: 16px; /* Prevents auto-zoom on mobile */
+    outline: none;
+    background: var(--white);
+    color: var(--charcoal);
+    transition: border-color 0.2s ease;
+  }
+  @media (min-width: 600px) {
+    .refund-input {
+      font-size: 13px;
+    }
+  }
+  .refund-input:focus {
+    border-color: var(--leaf);
+  }
+
+  .refund-file-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-size: 13px;
+    background: var(--mist);
+    color: var(--charcoal);
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<section class="section" style="padding: 40px 0; min-height: 75vh;">
+<section class="section" style="padding: 24px 0 60px; min-height: 75vh;">
   <div class="wrap" style="max-width: 840px; margin: 0 auto;">
     
-    <div style="margin-bottom: 24px;">
-      <h1 class="display" style="font-size: 26px; font-weight: 700; margin-bottom: 4px;">Return &amp; Refund Request</h1>
+    <div style="margin-bottom: 20px;">
+      <h1 class="display" style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">Return &amp; Refund Request</h1>
       <p style="color: var(--charcoal-soft); font-size: 13px; margin: 0;">Have an issue with your items? Upload photo/video verification and our support team will assist you.</p>
     </div>
 
-    <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 28px; align-items: start;">
+    <div class="refund-grid-layout">
       
       <!-- Submission Form -->
-      <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px;">
-        <h2 style="font-size: 16px; font-weight: 700; margin-bottom: 16px;">Submit Ticket</h2>
+      <div class="refund-card">
+        <h2 style="font-size: 16px; font-weight: 700; margin-bottom: 14px;">Submit Ticket</h2>
 
         {% if orders %}
           <form method="POST" action="{% url 'refund' %}" enctype="multipart/form-data">
@@ -25,7 +84,7 @@
               
               <div>
                 <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px;">Select Order *</label>
-                <select name="order_id" required style="width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 13px;">
+                <select name="order_id" required class="refund-input">
                   <option value="">-- Choose your order --</option>
                   {% for ord in orders %}
                     <option value="{{ ord.id }}">Order #{{ ord.id }} (₹{{ ord.total_amount }}) — {{ ord.created_at|date:"M d, Y" }}</option>
@@ -35,7 +94,7 @@
 
               <div>
                 <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px;">Reason for Return/Refund *</label>
-                <select name="reason" required style="width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 13px;">
+                <select name="reason" required class="refund-input">
                   <option value="damaged">Damaged / Expired Item</option>
                   <option value="missing">Missing Item in Delivery</option>
                   <option value="wrong_item">Wrong Item Delivered</option>
@@ -46,7 +105,7 @@
 
               <div>
                 <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px;">Details / Comments *</label>
-                <textarea name="description" rows="3" required placeholder="Please describe the issue in detail..." style="width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 13px; resize: vertical;"></textarea>
+                <textarea name="description" rows="3" required placeholder="Please describe the issue in detail..." class="refund-input" style="resize: vertical;"></textarea>
               </div>
 
               <!-- Media Verification Upload -->
@@ -59,12 +118,12 @@
                   name="proof_file" 
                   accept="image/*,video/*" 
                   required 
-                  style="width: 100%; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 12px; background: var(--mist);"
+                  class="refund-file-input"
                 >
-                <small style="color: var(--charcoal-soft); font-size: 11px;">Upload a clear photo or short video clip showing the item packaging or defect (Max 25MB).</small>
+                <small style="color: var(--charcoal-soft); font-size: 11px; display: block; margin-top: 4px;">Upload a clear photo or short video clip showing the item packaging or defect (Max 25MB).</small>
               </div>
 
-              <button type="submit" class="btn btn-primary" style="padding: 10px 20px; font-size: 13px; justify-content: center; margin-top: 6px;">
+              <button type="submit" class="btn btn-primary" style="padding: 11px 20px; font-size: 14px; justify-content: center; min-height: 44px; margin-top: 4px;">
                 Submit for Verification →
               </button>
             </div>
@@ -75,11 +134,11 @@
       </div>
 
       <!-- Past Refund Tickets -->
-      <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px;">
-        <h2 style="font-size: 16px; font-weight: 700; margin-bottom: 16px;">My Requests</h2>
+      <div class="refund-card">
+        <h2 style="font-size: 16px; font-weight: 700; margin-bottom: 14px;">My Requests</h2>
 
         {% if my_refunds %}
-          <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div style="display: flex; flex-direction: column; gap: 10px;">
             {% for ref in my_refunds %}
               <div style="background: var(--mist); border: 1px solid var(--line); padding: 12px; border-radius: 10px; font-size: 12px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">

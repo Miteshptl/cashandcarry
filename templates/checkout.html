@@ -2,29 +2,108 @@
 
 {% block title %}Checkout — CnC Supermarket{% endblock %}
 
+{% block extra_css %}
+<style>
+  .checkout-grid-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+  @media (min-width: 860px) {
+    .checkout-grid-layout {
+      grid-template-columns: 1.5fr 1fr;
+      gap: 28px;
+    }
+  }
+
+  .checkout-card {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 16px;
+  }
+  @media (min-width: 600px) {
+    .checkout-card {
+      padding: 24px;
+    }
+  }
+
+  /* Two-column responsive field groups */
+  .form-row-2col {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  @media (min-width: 600px) {
+    .form-row-2col {
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+  }
+
+  .checkout-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+    background: var(--white);
+    color: var(--charcoal);
+    transition: border-color 0.2s ease;
+  }
+  .checkout-input:focus {
+    border-color: var(--leaf);
+  }
+
+  /* Sticky Mobile Order Bar */
+  .mobile-checkout-sticky-bar {
+    display: none;
+  }
+  @media (max-width: 859px) {
+    .mobile-checkout-sticky-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--white);
+      border-top: 1px solid var(--line);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      z-index: 99;
+      box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.06);
+    }
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<section class="section" style="padding: 40px 0;">
+<section class="section" style="padding: 24px 0 60px;">
   <div class="wrap">
     
-    <h1 class="display" style="font-size: 28px; font-weight: 700; margin-bottom: 24px;">Checkout</h1>
+    <h1 class="display" style="font-size: 24px; font-weight: 700; margin-bottom: 20px;">Checkout</h1>
 
     <form method="POST" action="{% url 'checkout' %}" id="checkout-form">
       {% csrf_token %}
 
-      <div style="display: grid; grid-template-columns: 1.6fr 1fr; gap: 32px; align-items: start;">
+      <div class="checkout-grid-layout">
         
         <!-- LEFT COLUMN -->
-        <div style="display: flex; flex-direction: column; gap: 24px;">
+        <div style="display: flex; flex-direction: column; gap: 18px;">
 
-          <!-- 1. Customer Contact Details (Mandatory Phone) -->
-          <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px;">
-            <h2 style="font-size: 17px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+          <!-- 1. Customer Contact Details -->
+          <div class="checkout-card">
+            <h2 style="font-size: 16px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
               <span>👤</span> Contact Information
             </h2>
             
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="form-row-2col">
               <div>
-                <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px;">
+                <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px;">
                   Phone Number <span style="color: var(--chili);">*</span>
                 </label>
                 <input 
@@ -35,68 +114,68 @@
                   pattern="[0-9]{10}"
                   maxlength="10"
                   required 
-                  style="width: 100%; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px;"
+                  class="checkout-input"
                 >
-                <small style="color: var(--charcoal-soft); font-size: 11px;">10-digit mobile number for delivery updates</small>
+                <small style="color: var(--charcoal-soft); font-size: 11px; display: block; margin-top: 4px;">10-digit mobile number for delivery updates</small>
               </div>
 
               <div>
-                <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px;">Email Address</label>
+                <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px;">Email Address</label>
                 <input 
                   type="email" 
                   name="email" 
                   value="{{ user.email|default:'' }}" 
                   placeholder="your.email@example.com" 
-                  style="width: 100%; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px;"
+                  class="checkout-input"
                 >
               </div>
             </div>
           </div>
 
           <!-- 2. Delivery Address Selection & Add New Address -->
-          <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-              <h2 style="font-size: 17px; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 8px;">
+          <div class="checkout-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+              <h2 style="font-size: 16px; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 8px;">
                 <span>📍</span> Delivery Address
               </h2>
             </div>
 
             {% if addresses %}
               <!-- Saved Address Cards List -->
-              <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px;">
+              <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px;">
                 {% for addr in addresses %}
-                  <label style="display: flex; align-items: flex-start; gap: 12px; border: 1px solid var(--line); padding: 14px; border-radius: 10px; cursor: pointer; background: var(--mist);" class="address-option-label">
+                  <label style="display: flex; align-items: flex-start; gap: 10px; border: 1px solid var(--line); padding: 12px; border-radius: 10px; cursor: pointer; background: var(--mist);" class="address-option-label">
                     <input type="radio" name="selected_address" value="{{ addr.id }}" {% if forloop.first %}checked{% endif %} onchange="handleAddressChange(this.value)" style="margin-top: 4px;">
                     <div>
-                      <strong style="color: var(--charcoal);">{{ addr.line1 }}</strong>
-                      {% if addr.landmark %}<div style="font-size: 13px; color: var(--charcoal-soft);">Landmark: {{ addr.landmark }}</div>{% endif %}
-                      <div class="mono" style="font-size: 12px; color: var(--leaf); margin-top: 2px;">PIN: {{ addr.pincode }}</div>
+                      <strong style="color: var(--charcoal); font-size: 13px;">{{ addr.line1 }}</strong>
+                      {% if addr.landmark %}<div style="font-size: 12px; color: var(--charcoal-soft);">Landmark: {{ addr.landmark }}</div>{% endif %}
+                      <div class="mono" style="font-size: 11px; color: var(--leaf); margin-top: 2px;">PIN: {{ addr.pincode }}</div>
                     </div>
                   </label>
                 {% endfor %}
 
                 <!-- "Add New Address" Radio Button Option -->
-                <label style="display: flex; align-items: center; gap: 12px; border: 1px dashed var(--leaf); padding: 14px; border-radius: 10px; cursor: pointer; background: rgba(47, 107, 79, 0.04);" class="address-option-label">
+                <label style="display: flex; align-items: center; gap: 10px; border: 1px dashed var(--leaf); padding: 12px; border-radius: 10px; cursor: pointer; background: rgba(47, 107, 79, 0.04);" class="address-option-label">
                   <input type="radio" name="selected_address" value="new" onchange="handleAddressChange(this.value)">
-                  <strong style="color: var(--leaf);">+ Add & Deliver to a New Address</strong>
+                  <strong style="color: var(--leaf); font-size: 13px;">+ Add & Deliver to a New Address</strong>
                 </label>
               </div>
 
               <!-- New Address Form (Hidden by default when saved address is checked) -->
-              <div id="new-address-form-box" style="display: none; flex-direction: column; gap: 12px; background: var(--mist); padding: 18px; border-radius: 12px; border: 1px solid var(--line);">
-                <h4 style="font-size: 14px; font-weight: 700; margin: 0 0 6px 0; color: var(--charcoal);">Enter New Address Details</h4>
+              <div id="new-address-form-box" style="display: none; flex-direction: column; gap: 10px; background: var(--mist); padding: 14px; border-radius: 12px; border: 1px solid var(--line);">
+                <h4 style="font-size: 13px; font-weight: 700; margin: 0 0 4px 0; color: var(--charcoal);">Enter New Address Details</h4>
                 <div>
                   <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px;">Flat / House No. / Building / Street *</label>
-                  <input type="text" id="line1" name="line1" placeholder="e.g. Flat 402, Sunshine Heights, SV Road" style="width: 100%; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; font-size: 13px;">
+                  <input type="text" id="line1" name="line1" placeholder="e.g. Flat 402, Sunshine Heights, SV Road" class="checkout-input">
                 </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="form-row-2col">
                   <div>
                     <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px;">Landmark (Optional)</label>
-                    <input type="text" id="landmark" name="landmark" placeholder="e.g. Near Metro Station" style="width: 100%; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; font-size: 13px;">
+                    <input type="text" id="landmark" name="landmark" placeholder="e.g. Near Metro Station" class="checkout-input">
                   </div>
                   <div>
                     <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px;">Pincode *</label>
-                    <input type="text" id="pincode" name="pincode" placeholder="e.g. 400001" style="width: 100%; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; font-size: 13px;">
+                    <input type="text" id="pincode" name="pincode" placeholder="e.g. 400001" class="checkout-input">
                   </div>
                 </div>
               </div>
@@ -104,19 +183,19 @@
             {% else %}
               <!-- Direct Input if User Has Zero Saved Addresses -->
               <input type="hidden" name="selected_address" value="new">
-              <div style="display: flex; flex-direction: column; gap: 12px;">
+              <div style="display: flex; flex-direction: column; gap: 10px;">
                 <div>
                   <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px;">Flat / House No. / Building / Street *</label>
-                  <input type="text" name="line1" required placeholder="e.g. Flat 402, Sunshine Heights, SV Road" style="width: 100%; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; font-size: 13px;">
+                  <input type="text" name="line1" required placeholder="e.g. Flat 402, Sunshine Heights, SV Road" class="checkout-input">
                 </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="form-row-2col">
                   <div>
                     <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px;">Landmark (Optional)</label>
-                    <input type="text" name="landmark" placeholder="e.g. Near Metro Station" style="width: 100%; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; font-size: 13px;">
+                    <input type="text" name="landmark" placeholder="e.g. Near Metro Station" class="checkout-input">
                   </div>
                   <div>
                     <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px;">Pincode *</label>
-                    <input type="text" name="pincode" required placeholder="e.g. 400001" style="width: 100%; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; font-size: 13px;">
+                    <input type="text" name="pincode" required placeholder="e.g. 400001" class="checkout-input">
                   </div>
                 </div>
               </div>
@@ -124,15 +203,15 @@
           </div>
 
           <!-- 3. Delivery Speed -->
-          <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px;">
-            <h2 style="font-size: 17px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+          <div class="checkout-card">
+            <h2 style="font-size: 16px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
               <span>⚡</span> Delivery Speed
             </h2>
-            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-              <label style="flex: 1; min-width: 200px; display: flex; align-items: center; gap: 12px; border: 1px solid var(--leaf); background: rgba(47, 107, 79, 0.05); padding: 14px; border-radius: 10px; cursor: pointer;">
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <label style="flex: 1; min-width: 100%; display: flex; align-items: center; gap: 10px; border: 1px solid var(--leaf); background: rgba(47, 107, 79, 0.05); padding: 12px; border-radius: 10px; cursor: pointer;">
                 <input type="radio" name="delivery_mode" value="instant" checked>
                 <div>
-                  <strong style="color: var(--leaf);">Instant Express Delivery</strong>
+                  <strong style="color: var(--leaf); font-size: 13px;">Instant Express Delivery</strong>
                   <div style="font-size: 12px; color: var(--charcoal-soft);">Delivered within 30 minutes</div>
                 </div>
               </label>
@@ -140,14 +219,14 @@
           </div>
 
           <!-- 4. Payment Method -->
-          <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px;">
-            <h2 style="font-size: 17px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+          <div class="checkout-card">
+            <h2 style="font-size: 16px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 8px;">
               <span>💳</span> Payment Option
             </h2>
-            <label style="display: flex; align-items: center; gap: 12px; border: 1px solid var(--line); padding: 14px; border-radius: 10px; cursor: pointer; background: var(--mist);">
+            <label style="display: flex; align-items: center; gap: 10px; border: 1px solid var(--line); padding: 12px; border-radius: 10px; cursor: pointer; background: var(--mist);">
               <input type="radio" name="payment_method" value="COD" checked>
               <div>
-                <strong>Cash on Delivery / UPI QR on Delivery</strong>
+                <strong style="font-size: 13px; color: var(--charcoal);">Cash on Delivery / UPI QR on Delivery</strong>
                 <div style="font-size: 12px; color: var(--charcoal-soft);">Pay safely upon receiving your items</div>
               </div>
             </label>
@@ -156,14 +235,14 @@
         </div>
 
         <!-- RIGHT COLUMN: Bill Summary -->
-        <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px; position: sticky; top: 90px;">
-          <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 16px;">Order Summary</h2>
+        <div class="checkout-card" style="position: sticky; top: 80px;">
+          <h2 style="font-size: 17px; font-weight: 700; margin-bottom: 14px;">Order Summary</h2>
 
           <!-- Items list preview -->
-          <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; max-height: 220px; overflow-y: auto; padding-right: 4px;">
+          <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; max-height: 200px; overflow-y: auto; padding-right: 4px;">
             {% for item in cart_items %}
               <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
-                <div>
+                <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 75%;">
                   <span style="font-weight: 600;">{{ item.product.name }}</span>
                   <span style="color: var(--charcoal-soft); font-size: 12px;"> × {{ item.quantity }}</span>
                 </div>
@@ -172,14 +251,14 @@
             {% endfor %}
           </div>
 
-          <hr style="border: none; border-top: 1px solid var(--line); margin: 16px 0;">
+          <hr style="border: none; border-top: 1px solid var(--line); margin: 12px 0;">
 
           <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; color: var(--charcoal-soft);">
             <span>Subtotal</span>
             <span class="mono" style="color: var(--charcoal); font-weight: 600;">₹{{ subtotal }}</span>
           </div>
 
-          <div style="display: flex; justify-content: space-between; margin-bottom: 14px; font-size: 14px; color: var(--charcoal-soft);">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px; color: var(--charcoal-soft);">
             <span>Delivery Fee</span>
             <span class="mono">
               {% if delivery_fee == 0 %}
@@ -190,17 +269,29 @@
             </span>
           </div>
 
-          <div style="display: flex; justify-content: space-between; padding-top: 14px; border-top: 1px solid var(--line); font-size: 18px; font-weight: 700;">
+          <div style="display: flex; justify-content: space-between; padding-top: 12px; border-top: 1px solid var(--line); font-size: 17px; font-weight: 700;">
             <span>Grand Total</span>
             <span class="mono" style="color: var(--leaf);">₹{{ grand_total }}</span>
           </div>
 
-          <button type="submit" class="btn btn-primary" style="display: flex; justify-content: center; width: 100%; margin-top: 24px; padding: 14px; font-size: 15px;">
+          <button type="submit" class="btn btn-primary" style="display: flex; justify-content: center; width: 100%; margin-top: 20px; padding: 12px; font-size: 14px;">
             Place Order (₹{{ grand_total }}) →
           </button>
         </div>
 
       </div>
+
+      <!-- Mobile Floating Sticky Place Order Bar -->
+      <div class="mobile-checkout-sticky-bar">
+        <div>
+          <span style="font-size: 11px; color: var(--charcoal-soft); display: block;">Total to Pay</span>
+          <span class="mono" style="font-size: 16px; font-weight: 700; color: var(--leaf);">₹{{ grand_total }}</span>
+        </div>
+        <button type="submit" class="btn btn-primary" style="padding: 10px 20px; font-size: 13px;">
+          Place Order →
+        </button>
+      </div>
+
     </form>
 
   </div>

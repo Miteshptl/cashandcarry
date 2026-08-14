@@ -1,17 +1,89 @@
 {% extends 'base.html' %}
 
-{% block title %}About Us — StoreFront{% endblock %}
+{% block title %}About Us — CnC Supermarket{% endblock %}
+
+{% block extra_css %}
+<style>
+  .policy-card {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 20px 16px;
+    max-width: 800px;
+    margin: 0 auto;
+    line-height: 1.7;
+  }
+  @media (min-width: 600px) {
+    .policy-card {
+      padding: 32px 28px;
+    }
+  }
+  @media (min-width: 768px) {
+    .policy-card {
+      padding: 40px;
+    }
+  }
+
+  .policy-heading {
+    font-size: 24px;
+    color: var(--charcoal);
+    margin-bottom: 6px;
+    line-height: 1.2;
+  }
+  @media (min-width: 600px) {
+    .policy-heading {
+      font-size: 28px;
+    }
+  }
+  @media (min-width: 768px) {
+    .policy-heading {
+      font-size: 32px;
+      margin-bottom: 12px;
+    }
+  }
+
+  .about-footer-action {
+    margin-top: 28px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  @media (max-width: 599px) {
+    .about-footer-action {
+      flex-direction: column;
+      align-items: stretch;
+      text-align: center;
+    }
+    .about-footer-action .btn {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+</style>
+{% endblock %}
 
 {% block content %}
-<section class="section">
+<section class="section" style="padding: 24px 0 60px; min-height: 70vh;">
   <div class="wrap">
-    <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 40px; max-width: 800px; margin: 0 auto; line-height: 1.7;">
-      <h1 class="display" style="font-size: 32px; margin-bottom: 12px;">About StoreFront</h1>
-      <p class="mono" style="font-size: 12px; color: var(--turmeric-dark); margin-bottom: 24px;">LAST UPDATED: AUGUST 2026</p>
+    <div class="policy-card">
+      <h1 class="display policy-heading">About CnC Supermarket</h1>
+      <p class="mono" style="font-size: 11px; color: var(--turmeric-dark); margin-bottom: 20px; letter-spacing: 0.04em;">LAST UPDATED: AUGUST 2026</p>
       
-      <p style="color: var(--charcoal-soft); margin-bottom: 16px;">
-        We provide lightning-fast scheduled and instant delivery for local essential goods with precision and quality guarantees.
+      <p style="color: var(--charcoal-soft); font-size: 14px; margin-bottom: 16px;">
+        We provide lightning-fast scheduled and instant delivery for local essential goods with precision and quality guarantees across Mumbai.
       </p>
+
+      <!-- Action Footer Box -->
+      <div class="about-footer-action">
+        <span style="font-size: 13px; color: var(--charcoal-soft);">Ready to start shopping fresh essentials?</span>
+        <a href="{% url 'home' %}" class="btn btn-primary" style="padding: 9px 18px; font-size: 13px; min-height: 40px;">
+          Explore Products →
+        </a>
+      </div>
     </div>
   </div>
 </section>

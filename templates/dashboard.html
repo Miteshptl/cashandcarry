@@ -1,69 +1,344 @@
 {% extends 'base.html' %}
 
-{% block title %}Store Dashboard — CnC Operations{% endblock %}
+{% block title %}Store Operations Dashboard — CnC{% endblock %}
+
+{% block extra_css %}
+<style>
+  .dash-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+
+  .dash-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  @media (min-width: 768px) {
+    .dash-kpi-grid {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+  }
+
+  .kpi-card {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 16px;
+    text-decoration: none;
+    display: block;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+  }
+  .kpi-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--leaf);
+  }
+
+  .mgmt-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+    margin-bottom: 28px;
+  }
+  @media (min-width: 600px) {
+    .mgmt-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+  }
+  @media (min-width: 992px) {
+    .mgmt-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  .mgmt-card {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 18px 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    text-decoration: none;
+    color: var(--charcoal);
+    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .mgmt-card:hover {
+    transform: translateY(-3px);
+    border-color: var(--leaf);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  }
+
+  .mgmt-card-icon {
+    font-size: 24px;
+    margin-bottom: 10px;
+  }
+
+  .mgmt-card-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--charcoal);
+    margin-bottom: 4px;
+  }
+
+  .mgmt-card-desc {
+    font-size: 12px;
+    color: var(--charcoal-soft);
+    line-height: 1.4;
+    margin-bottom: 14px;
+  }
+
+  .mgmt-card-action {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--leaf);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 10px;
+    border-top: 1px dashed var(--line);
+  }
+
+  .dash-split-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+  @media (min-width: 880px) {
+    .dash-split-grid {
+      grid-template-columns: 2fr 1fr;
+      gap: 24px;
+    }
+  }
+
+  .dash-panel {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 16px;
+  }
+  @media (min-width: 600px) {
+    .dash-panel {
+      padding: 24px;
+    }
+  }
+
+  .orders-table-wrapper {
+    display: none;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  @media (min-width: 680px) {
+    .orders-table-wrapper {
+      display: block;
+    }
+  }
+
+  .orders-mobile-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  @media (min-width: 680px) {
+    .orders-mobile-list {
+      display: none;
+    }
+  }
+
+  .order-item-card {
+    background: var(--mist);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 12px;
+  }
+</style>
+{% endblock %}
 
 {% block content %}
-<section class="section" style="padding: 32px 0; min-height: 80vh;">
+<section class="section" style="padding: 24px 0 60px; min-height: 80vh;">
   <div class="wrap">
 
-    <!-- Header Row with Quick Action Buttons -->
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
+    <!-- Top Header & Quick Buttons -->
+    <div class="dash-header">
       <div>
-        <h1 class="display" style="font-size: 26px; font-weight: 700; margin: 0 0 4px 0;">Operations Dashboard</h1>
-        <p style="color: var(--charcoal-soft); font-size: 13px; margin: 0;">Live store performance, pending orders, refunds, and inventory health.</p>
+        <span class="mono" style="font-size: 11px; color: var(--turmeric-dark); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;">Store Operations</span>
+        <h1 class="display" style="font-size: 26px; font-weight: 700; margin: 2px 0 0 0;">Management Dashboard</h1>
       </div>
 
-      <!-- Action Buttons -->
-      <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-        <a href="{% url 'manage_refunds' %}" class="btn btn-secondary" style="font-size: 13px; padding: 8px 16px; border-color: var(--chili); color: var(--chili);">
-          🔄 Refund Requests ({% if pending_refunds_count %}{{ pending_refunds_count }}{% else %}0{% endif %})
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <a href="{% url 'item_picking' %}" class="btn btn-secondary" style="font-size: 12px; padding: 7px 12px; min-height: 38px;">
+          📋 Floor Picking
         </a>
-        <a href="{% url 'live_orders' %}" class="btn btn-primary" style="font-size: 13px; padding: 8px 16px;">
-          ⚡ Live Order Queue
+        <a href="{% url 'add_product' %}" class="btn btn-secondary" style="font-size: 12px; padding: 7px 12px; min-height: 38px;">
+          ➕ Add Product
+        </a>
+        <a href="{% url 'live_orders' %}" class="btn btn-primary" style="font-size: 12px; padding: 7px 14px; min-height: 38px;">
+          ⚡ Live Orders
         </a>
       </div>
     </div>
 
-    <!-- Summary Metrics Cards -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 28px;">
+    <!-- 1. KPI Summary Cards -->
+    <div class="dash-kpi-grid">
+      <a href="{% url 'live_orders' %}" class="kpi-card">
+        <div style="font-size: 11px; color: var(--charcoal-soft); font-weight: 600; text-transform: uppercase;">Pending Orders</div>
+        <div class="mono" style="font-size: 24px; font-weight: 700; color: var(--turmeric-dark); margin-top: 4px;">{{ pending_orders_count|default:"0" }}</div>
+      </a>
+
+      <a href="{% url 'live_orders' %}" class="kpi-card">
+        <div style="font-size: 11px; color: var(--charcoal-soft); font-weight: 600; text-transform: uppercase;">Active / Packing</div>
+        <div class="mono" style="font-size: 24px; font-weight: 700; color: var(--leaf); margin-top: 4px;">{{ active_orders_count|default:"0" }}</div>
+      </a>
+
+      <a href="{% url 'manage_refunds' %}" class="kpi-card">
+        <div style="font-size: 11px; color: var(--charcoal-soft); font-weight: 600; text-transform: uppercase;">Refund Claims</div>
+        <div class="mono" style="font-size: 24px; font-weight: 700; color: var(--chili); margin-top: 4px;">{{ pending_refunds_count|default:"0" }}</div>
+      </a>
+
+      <a href="{% url 'manage_inventory' %}" class="kpi-card">
+        <div style="font-size: 11px; color: var(--charcoal-soft); font-weight: 600; text-transform: uppercase;">Low Stock (&lt;10)</div>
+        <div class="mono" style="font-size: 24px; font-weight: 700; color: var(--turmeric-dark); margin-top: 4px;">{{ low_stock_count|default:"0" }}</div>
+      </a>
+    </div>
+
+    <!-- 2. Primary Operations & Management Grid -->
+    <div style="margin-bottom: 20px;">
+      <h2 class="display" style="font-size: 18px; color: var(--charcoal); margin-bottom: 12px;">Store Management &amp; Tools</h2>
       
-      <div style="background: var(--white); border: 1px solid var(--line); border-radius: 14px; padding: 20px;">
-        <div style="font-size: 12px; color: var(--charcoal-soft); font-weight: 600; text-transform: uppercase;">Pending Orders</div>
-        <div class="mono" style="font-size: 28px; font-weight: 700; color: var(--turmeric-dark); margin-top: 6px;">{{ pending_orders_count }}</div>
-      </div>
+      <div class="mgmt-grid">
 
-      <div style="background: var(--white); border: 1px solid var(--line); border-radius: 14px; padding: 20px;">
-        <div style="font-size: 12px; color: var(--charcoal-soft); font-weight: 600; text-transform: uppercase;">Active / Packing</div>
-        <div class="mono" style="font-size: 28px; font-weight: 700; color: var(--leaf); margin-top: 6px;">{{ active_orders_count }}</div>
-      </div>
+        <!-- 1. Manage Inventory -->
+        <a href="{% url 'manage_inventory' %}" class="mgmt-card">
+          <div>
+            <div class="mgmt-card-icon">📦</div>
+            <div class="mgmt-card-title">Manage Inventory</div>
+            <div class="mgmt-card-desc">Update stock counts, view low-stock alerts, and track available quantity.</div>
+          </div>
+          <div class="mgmt-card-action">
+            <span>Open Inventory</span>
+            <span>→</span>
+          </div>
+        </a>
 
-      <!-- Pending Refunds Card -->
-      <div style="background: var(--white); border: 1px solid var(--line); border-radius: 14px; padding: 20px;">
-        <div style="font-size: 12px; color: var(--charcoal-soft); font-weight: 600; text-transform: uppercase;">Pending Refunds</div>
-        <div class="mono" style="font-size: 28px; font-weight: 700; color: var(--chili); margin-top: 6px;">
-          <a href="{% url 'manage_refunds' %}">{{ pending_refunds_count }}</a>
-        </div>
-      </div>
+        <!-- 2. Manage Pricing -->
+        <a href="{% url 'manage_prices' %}" class="mgmt-card">
+          <div>
+            <div class="mgmt-card-icon">🏷️</div>
+            <div class="mgmt-card-title">Manage Pricing</div>
+            <div class="mgmt-card-desc">Set original retail prices, adjust promotional discounts, and review margins.</div>
+          </div>
+          <div class="mgmt-card-action">
+            <span>Open Pricing</span>
+            <span>→</span>
+          </div>
+        </a>
 
-      <div style="background: var(--white); border: 1px solid var(--line); border-radius: 14px; padding: 20px;">
-        <div style="font-size: 12px; color: var(--charcoal-soft); font-weight: 600; text-transform: uppercase;">Low Stock (&lt;10)</div>
-        <div class="mono" style="font-size: 28px; font-weight: 700; color: var(--turmeric-dark); margin-top: 6px;">{{ low_stock_count }}</div>
-      </div>
+        <!-- 3. Manage Coupons -->
+        <a href="{% url 'manage_coupons' %}" class="mgmt-card">
+          <div>
+            <div class="mgmt-card-icon">🎟️</div>
+            <div class="mgmt-card-title">Manage Coupons</div>
+            <div class="mgmt-card-desc">Create discount codes, set percentage or flat deductions, and valid limits.</div>
+          </div>
+          <div class="mgmt-card-action">
+            <span>Open Coupons</span>
+            <span>→</span>
+          </div>
+        </a>
 
+        <!-- 4. Manage Staff -->
+        <a href="{% url 'manage_staff' %}" class="mgmt-card">
+          <div>
+            <div class="mgmt-card-icon">👥</div>
+            <div class="mgmt-card-title">Manage Staff</div>
+            <div class="mgmt-card-desc">Control role assignments (Admin, Manager, Employee, Customer) and access.</div>
+          </div>
+          <div class="mgmt-card-action">
+            <span>Open Staff Directory</span>
+            <span>→</span>
+          </div>
+        </a>
+
+        <!-- 5. Floor Picking & Substitutions -->
+        <a href="{% url 'item_picking' %}" class="mgmt-card">
+          <div>
+            <div class="mgmt-card-icon">📋</div>
+            <div class="mgmt-card-title">Item Picking</div>
+            <div class="mgmt-card-desc">Warehouse picking list for item collection, substitutions, and stock checks.</div>
+          </div>
+          <div class="mgmt-card-action">
+            <span>Open Picking List</span>
+            <span>→</span>
+          </div>
+        </a>
+
+        <!-- 6. Manage Refunds & Claims -->
+        <a href="{% url 'manage_refunds' %}" class="mgmt-card">
+          <div>
+            <div class="mgmt-card-icon">🔄</div>
+            <div class="mgmt-card-title">Manage Refunds</div>
+            <div class="mgmt-card-desc">Inspect customer return claims, uploaded proof images, and process refunds.</div>
+          </div>
+          <div class="mgmt-card-action">
+            <span>Open Refund Claims</span>
+            <span>→</span>
+          </div>
+        </a>
+
+        <!-- 7. Live Orders Queue -->
+        <a href="{% url 'live_orders' %}" class="mgmt-card">
+          <div>
+            <div class="mgmt-card-icon">⚡</div>
+            <div class="mgmt-card-title">Live Orders</div>
+            <div class="mgmt-card-desc">Accept incoming orders, move to packing, and assign to delivery agents.</div>
+          </div>
+          <div class="mgmt-card-action">
+            <span>Open Orders Queue</span>
+            <span>→</span>
+          </div>
+        </a>
+
+        <!-- 8. Add Product -->
+        <a href="{% url 'add_product' %}" class="mgmt-card">
+          <div>
+            <div class="mgmt-card-icon">➕</div>
+            <div class="mgmt-card-title">Add Product</div>
+            <div class="mgmt-card-desc">Add a single new grocery item listing, images, and prices.</div>
+          </div>
+          <div class="mgmt-card-action">
+            <span>Add Listing</span>
+            <span>→</span>
+          </div>
+        </a>
+
+      </div>
     </div>
 
-    <!-- Main Grid: Recent Orders & Stock Watch -->
-    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; align-items: start;">
+    <!-- 3. Split Section: Recent Orders & Stock Watch -->
+    <div class="dash-split-grid">
       
       <!-- Recent Orders Queue -->
-      <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+      <div class="dash-panel">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
           <h2 style="font-size: 16px; font-weight: 700; margin: 0;">Recent Orders Queue</h2>
-          <a href="{% url 'live_orders' %}" style="font-size: 13px; color: var(--leaf); font-weight: 600;">View all →</a>
+          <a href="{% url 'live_orders' %}" style="font-size: 12px; color: var(--leaf); font-weight: 600;">View live queue →</a>
         </div>
 
         {% if recent_orders %}
-          <div style="overflow-x: auto;">
+          <div class="orders-table-wrapper">
             <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
               <thead>
                 <tr style="border-bottom: 1px solid var(--line); text-align: left; color: var(--charcoal-soft);">
@@ -79,8 +354,8 @@
                   <tr style="border-bottom: 1px solid var(--line);">
                     <td class="mono" style="padding: 12px 10px; font-weight: 700;">#{{ order.id }}</td>
                     <td style="padding: 12px 10px;">
-                      <strong>{{ order.user.username }}</strong>
-                      <div style="font-size: 11px; color: var(--charcoal-soft);">{{ order.address.pincode }}</div>
+                      <strong>{{ order.user.first_name|default:order.user.username }}</strong>
+                      <div style="font-size: 11px; color: var(--charcoal-soft);">PIN: {{ order.address.pincode|default:"400101" }}</div>
                     </td>
                     <td style="padding: 12px 10px;">{{ order.items.count }} item(s)</td>
                     <td class="mono" style="padding: 12px 10px; font-weight: 600; color: var(--leaf);">₹{{ order.total_amount }}</td>
@@ -97,23 +372,52 @@
               </tbody>
             </table>
           </div>
+
+          <div class="orders-mobile-list">
+            {% for order in recent_orders %}
+              <div class="order-item-card">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span class="mono" style="font-weight: 700; color: var(--charcoal); font-size: 13px;">#{{ order.id }}</span>
+                  <span style="font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; text-transform: uppercase;
+                    {% if order.order_status == 'delivered' %}background: rgba(47, 107, 79, 0.15); color: var(--leaf);
+                    {% elif order.order_status == 'pending_acceptance' %}background: rgba(232, 163, 61, 0.15); color: var(--turmeric-dark);
+                    {% else %}background: rgba(47, 107, 79, 0.08); color: var(--leaf-dark);{% endif %}">
+                    {{ order.order_status|title }}
+                  </span>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                  <div>
+                    <strong>{{ order.user.first_name|default:order.user.username }}</strong>
+                    <span style="font-size: 11px; color: var(--charcoal-soft);"> · PIN {{ order.address.pincode|default:"400101" }}</span>
+                  </div>
+                  <span class="mono" style="font-weight: 700; color: var(--leaf);">₹{{ order.total_amount }}</span>
+                </div>
+                <div style="font-size: 11px; color: var(--charcoal-soft);">
+                  {{ order.items.count }} item(s)
+                </div>
+              </div>
+            {% endfor %}
+          </div>
         {% else %}
           <p style="color: var(--charcoal-soft); font-size: 13px; margin: 0;">No orders found.</p>
         {% endif %}
       </div>
 
-      <!-- Low Stock Sidebar Alert -->
-      <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px;">
-        <h2 style="font-size: 16px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
-          <span>⚠️</span> Low Stock Watch
-        </h2>
+      <!-- Low Stock Alert Watch -->
+      <div class="dash-panel">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+          <h2 style="font-size: 16px; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 6px;">
+            <span>⚠️</span> Low Stock Watch
+          </h2>
+          <a href="{% url 'manage_inventory' %}" style="font-size: 12px; color: var(--leaf); font-weight: 600;">Manage →</a>
+        </div>
 
         {% if low_stock_items %}
-          <div style="display: flex; flex-direction: column; gap: 12px;">
+          <div style="display: flex; flex-direction: column; gap: 10px;">
             {% for item in low_stock_items %}
               <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px; padding-bottom: 8px; border-bottom: 1px solid var(--line);">
-                <span style="font-weight: 600; max-width: 160px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ item.product.name }}</span>
-                <span class="mono" style="color: var(--chili); font-weight: 700;">{{ item.available_quantity }} left</span>
+                <span style="font-weight: 600; max-width: 140px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ item.name }}</span>
+                <span class="mono" style="color: var(--chili); font-weight: 700; font-size: 12px;">Low</span>
               </div>
             {% endfor %}
           </div>

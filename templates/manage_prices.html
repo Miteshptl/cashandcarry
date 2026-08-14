@@ -1,52 +1,208 @@
 {% extends 'base.html' %}
 
-{% block title %}Manage Prices & Discounts — CnC{% endblock %}
+{% block title %}Manage Prices &amp; Discounts — CnC{% endblock %}
+
+{% block extra_css %}
+<style>
+  .price-header-card {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 18px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  @media (min-width: 600px) {
+    .price-header-card {
+      padding: 24px;
+    }
+  }
+
+  .price-container-card {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 16px;
+  }
+  @media (min-width: 768px) {
+    .price-container-card {
+      padding: 24px;
+    }
+  }
+
+  /* Desktop Table View */
+  .price-table-wrapper {
+    display: none;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  @media (min-width: 768px) {
+    .price-table-wrapper {
+      display: block;
+    }
+  }
+
+  /* Mobile Responsive Pricing Cards */
+  .price-mobile-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  @media (min-width: 768px) {
+    .price-mobile-cards {
+      display: none;
+    }
+  }
+
+  .price-card-item {
+    background: var(--mist);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .price-input-mobile {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-size: 16px; /* Prevents auto-zoom on mobile */
+    background: var(--white);
+    color: var(--charcoal);
+    outline: none;
+  }
+  .price-input-mobile:focus {
+    border-color: var(--leaf);
+  }
+
+  .price-input-desktop {
+    width: 100px;
+    padding: 6px 10px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    font-size: 13px;
+    background: var(--white);
+    color: var(--charcoal);
+    outline: none;
+  }
+  .price-input-desktop:focus {
+    border-color: var(--leaf);
+  }
+</style>
+{% endblock %}
 
 {% block content %}
-<section class="section">
+<section class="section" style="padding: 24px 0 60px; min-height: 75vh;">
   <div class="wrap">
     
-    <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+    <!-- Top Header -->
+    <div class="price-header-card">
       <div>
-        <span class="mono" style="font-size: 11px; color: var(--turmeric-dark); font-weight: 600; text-transform: uppercase;">Pricing Console</span>
-        <h1 class="display" style="font-size: 26px; color: var(--charcoal); margin-top: 2px;">Product Prices & Discounts</h1>
+        <span class="mono" style="font-size: 11px; color: var(--turmeric-dark); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;">Pricing Console</span>
+        <h1 class="display" style="font-size: 22px; color: var(--charcoal); margin-top: 2px; margin-bottom: 0;">Product Prices &amp; Discounts</h1>
       </div>
-      <a href="{% url 'dashboard' %}" class="btn btn-secondary" style="font-size: 13px;">← Back to Dashboard</a>
+      <a href="{% url 'dashboard' %}" class="btn btn-secondary" style="font-size: 12px; padding: 7px 14px; min-height: 36px;">
+        ← Back to Dashboard
+      </a>
     </div>
 
-    <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px; overflow-x: auto;">
-      <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
-        <thead>
-          <tr style="border-bottom: 2px solid var(--line); color: var(--charcoal-soft); text-transform: uppercase; font-size: 11px;" class="mono">
-            <th style="padding: 12px;">Product</th>
-            <th style="padding: 12px;">Brand</th>
-            <th style="padding: 12px;">Original Price (₹)</th>
-            <th style="padding: 12px;">Discounted Price (₹)</th>
-            <th style="padding: 12px; text-align: right;">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for product in products %}
-          <tr style="border-bottom: 1px solid var(--line);">
-            <td style="padding: 14px; font-weight: 600;">{{ product.name }} <span style="font-size: 11px; color: var(--charcoal-soft);">({{ product.unit }})</span></td>
-            <td style="padding: 14px; color: var(--charcoal-soft);">{{ product.brand|default:"Generic" }}</td>
-            <form method="post">
+    <!-- Main Container -->
+    <div class="price-container-card">
+      
+      <!-- 1. DESKTOP VIEW: Data Table -->
+      <div class="price-table-wrapper">
+        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
+          <thead>
+            <tr style="border-bottom: 2px solid var(--line); color: var(--charcoal-soft); text-transform: uppercase; font-size: 11px;" class="mono">
+              <th style="padding: 12px 10px;">Product</th>
+              <th style="padding: 12px 10px;">Brand</th>
+              <th style="padding: 12px 10px;">Original Price (₹)</th>
+              <th style="padding: 12px 10px;">Discounted Price (₹)</th>
+              <th style="padding: 12px 10px; text-align: right;">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for product in products %}
+            <tr style="border-bottom: 1px solid var(--line);">
+              <td style="padding: 14px 10px; font-weight: 600;">
+                {{ product.name }} <span style="font-size: 11px; color: var(--charcoal-soft); font-weight: normal;">({{ product.unit }})</span>
+              </td>
+              <td style="padding: 14px 10px; color: var(--charcoal-soft);">{{ product.brand|default:"Generic" }}</td>
+              
+              <!-- Form Wrapper (Desktop) -->
+              <td style="padding: 14px 10px;">
+                <form id="price-form-{{ product.id }}" method="post" style="display: none;">
+                  {% csrf_token %}
+                  <input type="hidden" name="product_id" value="{{ product.id }}">
+                </form>
+                <input type="number" step="0.01" name="price" form="price-form-{{ product.id }}" value="{{ product.price }}" class="mono price-input-desktop" required>
+              </td>
+
+              <td style="padding: 14px 10px;">
+                <input type="number" step="0.01" name="discounted_price" form="price-form-{{ product.id }}" value="{{ product.discounted_price|default:'' }}" placeholder="Optional" class="mono price-input-desktop">
+              </td>
+
+              <td style="padding: 14px 10px; text-align: right;">
+                <button type="submit" form="price-form-{{ product.id }}" class="btn btn-primary" style="padding: 6px 14px; font-size: 12px; min-height: 32px;">
+                  Save Price
+                </button>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="5" style="padding: 24px; text-align: center; color: var(--charcoal-soft);">No products available to price.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 2. MOBILE VIEW: Responsive Product Price Cards -->
+      <div class="price-mobile-cards">
+        {% for product in products %}
+          <div class="price-card-item">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
+              <div>
+                <strong style="color: var(--charcoal); font-size: 14px;">{{ product.name }}</strong>
+                <div style="font-size: 11px; color: var(--charcoal-soft);">Unit: {{ product.unit }} · Brand: {{ product.brand|default:"Generic" }}</div>
+              </div>
+            </div>
+
+            <form method="post" style="display: flex; flex-direction: column; gap: 10px; margin-top: 4px;">
               {% csrf_token %}
               <input type="hidden" name="product_id" value="{{ product.id }}">
-              <td style="padding: 14px;">
-                <input type="number" step="0.01" name="price" value="{{ product.price }}" style="width: 90px; padding: 6px; border: 1px solid var(--line); border-radius: 6px;" class="mono" required>
-              </td>
-              <td style="padding: 14px;">
-                <input type="number" step="0.01" name="discounted_price" value="{{ product.discounted_price|default:'' }}" placeholder="Optional" style="width: 90px; padding: 6px; border: 1px solid var(--line); border-radius: 6px;" class="mono">
-              </td>
-              <td style="padding: 14px; text-align: right;">
-                <button type="submit" class="btn btn-primary" style="padding: 6px 12px; font-size: 12px;">Save Price</button>
-              </td>
+
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div>
+                  <label style="font-size: 10px; font-weight: 600; text-transform: uppercase; color: var(--charcoal-soft); display: block; margin-bottom: 4px;" class="mono">Original Price (₹) *</label>
+                  <input type="number" step="0.01" name="price" value="{{ product.price }}" required class="mono price-input-mobile">
+                </div>
+
+                <div>
+                  <label style="font-size: 10px; font-weight: 600; text-transform: uppercase; color: var(--charcoal-soft); display: block; margin-bottom: 4px;" class="mono">Offer Price (₹)</label>
+                  <input type="number" step="0.01" name="discounted_price" value="{{ product.discounted_price|default:'' }}" placeholder="Optional" class="mono price-input-mobile">
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-primary" style="padding: 10px; font-size: 13px; justify-content: center; min-height: 42px; margin-top: 2px;">
+                Save Price
+              </button>
             </form>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+          </div>
+        {% empty %}
+          <div style="padding: 24px; text-align: center; color: var(--charcoal-soft); font-size: 13px;">
+            No products available to price.
+          </div>
+        {% endfor %}
+      </div>
+
     </div>
 
   </div>

@@ -2,32 +2,95 @@
 
 {% block title %}Order Confirmed — CnC Supermarket{% endblock %}
 
+{% block extra_css %}
+<style>
+  .confirmation-card-wrapper {
+    max-width: 680px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .confirmation-card {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 24px 16px;
+    text-align: center;
+  }
+  @media (min-width: 600px) {
+    .confirmation-card {
+      padding: 40px;
+    }
+  }
+
+  .confirmation-detail-box {
+    background: var(--mist);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: left;
+    margin-bottom: 24px;
+  }
+  @media (min-width: 600px) {
+    .confirmation-detail-box {
+      padding: 20px;
+    }
+  }
+
+  .confirmation-detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 10px;
+    font-size: 13px;
+  }
+
+  .confirmation-actions {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  @media (max-width: 480px) {
+    .confirmation-actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .confirmation-actions .btn {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<section class="section" style="padding: 60px 0; min-height: 70vh;">
-  <div class="wrap" style="max-width: 680px; margin: 0 auto;">
+<section class="section" style="padding: 24px 0 60px; min-height: 75vh;">
+  <div class="wrap confirmation-card-wrapper">
     
-    <div style="background: var(--white); border: 1px solid var(--line); border-radius: 20px; padding: 40px; text-align: center;">
-      <div style="font-size: 56px; margin-bottom: 16px;">🎉</div>
-      <h1 class="display" style="font-size: 28px; font-weight: 700; color: var(--leaf); margin-bottom: 8px;">Order Placed Successfully!</h1>
-      <p style="color: var(--charcoal-soft); font-size: 14px; margin-bottom: 24px;">Thank you for shopping with CnC Supermarket. Your items are being packed for fast delivery.</p>
+    <div class="confirmation-card">
+      <div style="font-size: 48px; margin-bottom: 12px;">🎉</div>
+      <h1 class="display" style="font-size: 24px; font-weight: 700; color: var(--leaf); margin-bottom: 6px;">Order Placed Successfully!</h1>
+      <p style="color: var(--charcoal-soft); font-size: 13px; margin-bottom: 20px; line-height: 1.5;">Thank you for shopping with CnC Supermarket. Your items are being packed for fast delivery.</p>
 
       <!-- Order Tracking Details Box -->
-      <div style="background: var(--mist); border: 1px solid var(--line); border-radius: 12px; padding: 20px; text-align: left; margin-bottom: 24px;">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 13px;">
+      <div class="confirmation-detail-box">
+        <div class="confirmation-detail-row">
           <span style="color: var(--charcoal-soft);">Order Reference</span>
           <strong class="mono" style="color: var(--charcoal);">#{{ order.id }}</strong>
         </div>
-        <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 13px;">
+        <div class="confirmation-detail-row">
           <span style="color: var(--charcoal-soft);">Order Status</span>
           <span style="background: rgba(47, 107, 79, 0.15); color: var(--leaf); font-weight: 700; padding: 2px 8px; border-radius: 6px; font-size: 11px; text-transform: uppercase;">
             {{ order.order_status|title }}
           </span>
         </div>
-        <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 13px;">
-          <span style="color: var(--charcoal-soft);">Delivery Address</span>
-          <span style="font-weight: 600; text-align: right; max-width: 280px;">{{ order.address.line1 }}{% if order.address.landmark %}, {{ order.address.landmark }}{% endif %} (PIN: {{ order.address.pincode }})</span>
+        <div class="confirmation-detail-row">
+          <span style="color: var(--charcoal-soft); flex-shrink: 0;">Delivery Address</span>
+          <span style="font-weight: 600; text-align: right; word-break: break-word;">{{ order.address.line1 }}{% if order.address.landmark %}, {{ order.address.landmark }}{% endif %} <span class="mono" style="color: var(--leaf); font-size: 11px;">(PIN: {{ order.address.pincode }})</span></span>
         </div>
-        <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 13px;">
+        <div class="confirmation-detail-row">
           <span style="color: var(--charcoal-soft);">Payment Method</span>
           <strong>{{ order.payment_method }}</strong>
         </div>
@@ -38,21 +101,24 @@
       </div>
 
       <!-- Itemized Breakdown -->
-      <div style="text-align: left; margin-bottom: 32px;">
-        <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 12px;">Items Ordered</h3>
+      <div style="text-align: left; margin-bottom: 28px;">
+        <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 10px; color: var(--charcoal);">Items Ordered</h3>
         <div style="display: flex; flex-direction: column; gap: 8px;">
           {% for item in order_items %}
-            <div style="display: flex; justify-content: space-between; font-size: 13px; padding-bottom: 8px; border-bottom: 1px solid var(--line);">
-              <span>{{ item.product.name }} (Qty: {{ item.quantity }})</span>
-              <span class="mono" style="font-weight: 600;">₹{{ item.total_price }}</span>
+            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px; padding-bottom: 8px; border-bottom: 1px solid var(--line); gap: 10px;">
+              <span style="color: var(--charcoal); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                {{ item.product.name }} <strong style="color: var(--charcoal-soft); font-size: 12px;">(Qty: {{ item.quantity }})</strong>
+              </span>
+              <span class="mono" style="font-weight: 600; flex-shrink: 0;">₹{{ item.total_price }}</span>
             </div>
           {% endfor %}
         </div>
       </div>
 
-      <div style="display: flex; justify-content: center; gap: 14px; flex-wrap: wrap;">
-        <a href="{% url 'home' %}" class="btn btn-primary" style="padding: 12px 24px;">Continue Shopping</a>
-        <a href="{% url 'profile' %}" class="btn btn-secondary" style="padding: 12px 24px;">View My Orders</a>
+      <!-- Action Navigation Buttons -->
+      <div class="confirmation-actions">
+        <a href="{% url 'home' %}" class="btn btn-primary" style="padding: 12px 24px; min-height: 44px; font-size: 14px;">Continue Shopping</a>
+        <a href="{% url 'profile' %}" class="btn btn-secondary" style="padding: 12px 24px; min-height: 44px; font-size: 14px;">View My Orders</a>
       </div>
     </div>
 

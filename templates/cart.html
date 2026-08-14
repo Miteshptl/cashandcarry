@@ -2,48 +2,136 @@
 
 {% block title %}Your Cart — CnC Supermarket{% endblock %}
 
+{% block extra_css %}
+<style>
+  .cart-grid-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+    align-items: start;
+  }
+  @media (min-width: 860px) {
+    .cart-grid-layout {
+      grid-template-columns: 1.5fr 1fr;
+      gap: 28px;
+    }
+  }
+
+  .cart-card {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 16px;
+  }
+  @media (min-width: 600px) {
+    .cart-card {
+      padding: 24px;
+    }
+  }
+
+  .cart-item-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 14px;
+    margin-bottom: 14px;
+  }
+  .cart-item-row:not(:last-child) {
+    border-bottom: 1px solid var(--line);
+  }
+
+  .cart-item-img {
+    width: 60px;
+    height: 60px;
+    background: var(--mist);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  @media (min-width: 600px) {
+    .cart-item-img {
+      width: 72px;
+      height: 72px;
+    }
+  }
+
+  /* Sticky Mobile Checkout Bar */
+  .mobile-cart-sticky-bar {
+    display: none;
+  }
+  @media (max-width: 859px) {
+    .mobile-cart-sticky-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--white);
+      border-top: 1px solid var(--line);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      z-index: 99;
+      box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.06);
+    }
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<section class="section" style="min-height: 70vh; padding: 40px 0;">
+<section class="section" style="min-height: 70vh; padding: 24px 0 60px;">
   <div class="wrap">
     
-    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
-      <h1 class="display" style="font-size: 28px; font-weight: 700; margin: 0;">Shopping Cart</h1>
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+      <h1 class="display" style="font-size: 24px; font-weight: 700; margin: 0;">Shopping Cart</h1>
       {% if cart_items %}
-        <a href="{% url 'clear_cart' %}" class="btn btn-secondary" style="font-size: 12px; padding: 6px 12px; color: var(--chili); border-color: var(--chili);">
+        <a href="{% url 'clear_cart' %}" class="btn btn-secondary" style="font-size: 12px; padding: 5px 10px; color: var(--chili); border-color: var(--chili);">
           Clear Cart
         </a>
       {% endif %}
     </div>
 
     {% if cart_items %}
-      <div style="display: grid; grid-template-columns: 1.6fr 1fr; gap: 32px; align-items: start;">
+      <div class="cart-grid-layout">
         
         <!-- Cart Items List -->
-        <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px;">
+        <div class="cart-card">
           {% for item in cart_items %}
-            <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-bottom: 16px; margin-bottom: 16px; {% if not forloop.last %}border-bottom: 1px solid var(--line);{% endif %}">
+            <div class="cart-item-row">
               
               <!-- Product Image & Details -->
-              <div style="display: flex; align-items: center; gap: 16px;">
-                <div style="width: 64px; height: 64px; background: var(--mist); border-radius: 10px; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0;">
+              <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0;">
+                <div class="cart-item-img">
                   {% if item.product.get_image %}
                     <img src="{{ item.product.get_image }}" alt="{{ item.product.name }}" style="max-height: 100%; max-width: 100%; object-fit: contain;">
                   {% else %}
                     <span style="font-size: 24px;">🛒</span>
                   {% endif %}
                 </div>
-                <div>
-                  <h3 style="font-size: 15px; font-weight: 600; color: var(--charcoal); margin: 0 0 4px 0;">
+                <div style="min-width: 0; flex: 1;">
+                  <h3 style="font-size: 14px; font-weight: 600; color: var(--charcoal); margin: 0 0 4px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                     <a href="{% url 'product_detail' item.product.id %}">{{ item.product.name }}</a>
                   </h3>
-                  <div style="font-size: 13px; color: var(--charcoal-soft);">
-                    Qty: <strong>{{ item.quantity }}</strong> × ₹{{ item.unit_price }}
+                  <div style="font-size: 12px; color: var(--charcoal-soft); margin-bottom: 6px;">
+                    ₹{{ item.unit_price }} / unit
+                  </div>
+
+                  <!-- Inline Quantity Modifier -->
+                  <div class="qty-btn-group" style="min-height: 28px; padding: 1px 4px;">
+                    <button type="button" class="qty-btn" onclick="updateCartAndReload({{ item.product.id }}, 'decrease')">-</button>
+                    <span class="qty-val">{{ item.quantity }}</span>
+                    <button type="button" class="qty-btn" onclick="updateCartAndReload({{ item.product.id }}, 'increase')">+</button>
                   </div>
                 </div>
               </div>
 
               <!-- Item Subtotal Price -->
-              <div class="mono" style="font-size: 16px; font-weight: 700; color: var(--leaf); white-space: nowrap;">
+              <div class="mono" style="font-size: 15px; font-weight: 700; color: var(--leaf); white-space: nowrap; text-align: right;">
                 ₹{{ item.total_price }}
               </div>
 
@@ -52,15 +140,15 @@
         </div>
 
         <!-- Order Summary & Bill Box -->
-        <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px;">
-          <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 16px;">Bill Details</h2>
+        <div class="cart-card">
+          <h2 style="font-size: 17px; font-weight: 700; margin-bottom: 14px;">Bill Details</h2>
           
-          <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; color: var(--charcoal-soft);">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; color: var(--charcoal-soft);">
             <span>Item Subtotal</span>
             <span class="mono" style="color: var(--charcoal); font-weight: 600;">₹{{ subtotal }}</span>
           </div>
 
-          <div style="display: flex; justify-content: space-between; margin-bottom: 16px; font-size: 14px; color: var(--charcoal-soft);">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px; color: var(--charcoal-soft);">
             <span>Delivery Partner Fee</span>
             <span class="mono">
               {% if delivery_fee == 0 %}
@@ -72,32 +160,68 @@
           </div>
 
           {% if subtotal < 100 %}
-            <div style="background: rgba(232, 163, 61, 0.12); border: 1px solid var(--turmeric); border-radius: 8px; padding: 8px 12px; font-size: 12px; color: var(--turmeric-dark); margin-bottom: 16px;">
+            <div style="background: rgba(232, 163, 61, 0.12); border: 1px solid var(--turmeric); border-radius: 8px; padding: 8px 12px; font-size: 12px; color: var(--turmeric-dark); margin-bottom: 14px;">
               Add items worth <strong>₹{{ 100|add:"-"|add:subtotal }}</strong> more for <strong>FREE delivery</strong>!
             </div>
           {% endif %}
 
-          <div style="display: flex; justify-content: space-between; padding-top: 14px; border-top: 1px solid var(--line); font-size: 17px; font-weight: 700;">
+          <div style="display: flex; justify-content: space-between; padding-top: 12px; border-top: 1px solid var(--line); font-size: 16px; font-weight: 700;">
             <span>To Pay</span>
             <span class="mono" style="color: var(--leaf);">₹{{ grand_total }}</span>
           </div>
 
-          <a href="{% url 'checkout' %}" class="btn btn-primary" style="display: flex; justify-content: center; width: 100%; margin-top: 24px; padding: 12px; font-size: 14px;">
+          <a href="{% url 'checkout' %}" class="btn btn-primary" style="display: flex; justify-content: center; width: 100%; margin-top: 20px; padding: 11px; font-size: 14px;">
             Proceed to Checkout →
           </a>
         </div>
 
       </div>
+
+      <!-- Mobile Floating Checkout Summary -->
+      <div class="mobile-cart-sticky-bar">
+        <div>
+          <span style="font-size: 11px; color: var(--charcoal-soft); display: block;">Total to Pay</span>
+          <span class="mono" style="font-size: 16px; font-weight: 700; color: var(--leaf);">₹{{ grand_total }}</span>
+        </div>
+        <a href="{% url 'checkout' %}" class="btn btn-primary" style="padding: 9px 18px; font-size: 13px;">
+          Checkout →
+        </a>
+      </div>
+
     {% else %}
       <!-- Empty Cart State -->
-      <div style="text-align: center; padding: 64px 20px; background: var(--white); border: 1px solid var(--line); border-radius: 16px; max-width: 540px; margin: 0 auto;">
-        <div style="font-size: 48px; margin-bottom: 16px;">🛒</div>
-        <h2 class="display" style="font-size: 22px; font-weight: 600; margin-bottom: 8px;">Your cart is empty</h2>
-        <p style="color: var(--charcoal-soft); font-size: 14px; margin-bottom: 24px;">Your basket is waiting for fresh daily essentials and groceries.</p>
-        <a href="{% url 'product_list' %}" class="btn btn-primary" style="padding: 10px 24px;">Browse Products</a>
+      <div style="text-align: center; padding: 48px 16px; background: var(--white); border: 1px solid var(--line); border-radius: 16px; max-width: 500px; margin: 0 auto;">
+        <div style="font-size: 44px; margin-bottom: 12px;">🛒</div>
+        <h2 class="display" style="font-size: 20px; font-weight: 600; margin-bottom: 6px;">Your cart is empty</h2>
+        <p style="color: var(--charcoal-soft); font-size: 13px; margin-bottom: 20px;">Your basket is waiting for fresh daily essentials and groceries.</p>
+        <a href="{% url 'product_list' %}" class="btn btn-primary" style="padding: 9px 22px;">Browse Products</a>
       </div>
     {% endif %}
 
   </div>
 </section>
+
+<script>
+function updateCartAndReload(productId, action) {
+  fetch("{% url 'update_cart_quantity' %}", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRFToken": getCsrfToken()
+    },
+    body: JSON.stringify({ product_id: productId, action: action })
+  })
+  .then(res => {
+    if (!res.ok) throw new Error(`Server error ${res.status}`);
+    return res.json();
+  })
+  .then(data => {
+    if (data.status === "success") {
+      // Reload page to recompute bill subtotals accurately
+      window.location.reload();
+    }
+  })
+  .catch(err => console.error("Cart update error:", err));
+}
+</script>
 {% endblock %}

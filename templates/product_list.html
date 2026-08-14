@@ -1,140 +1,240 @@
 {% extends 'base.html' %}
 
-{% block title %}Create an Account — CnC Supermarket{% endblock %}
+{% block title %}All Products — CnC Supermarket{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* Category Pills Filter Bar */
+  .category-filter-scroll {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 12px;
+    margin-bottom: 20px;
+  }
+  .category-filter-scroll::-webkit-scrollbar {
+    display: none;
+  }
+  .cat-pill-btn {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+    padding: 6px 14px;
+    border-radius: 20px;
+    background: var(--white);
+    border: 1px solid var(--line);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--charcoal-soft);
+    text-decoration: none;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+  }
+  .cat-pill-btn:hover {
+    border-color: var(--leaf);
+    color: var(--leaf);
+  }
+  .cat-pill-btn.active {
+    background: var(--leaf);
+    color: var(--white);
+    border-color: var(--leaf);
+  }
+
+  /* Responsive Grid */
+  .catalog-product-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  @media (min-width: 576px) {
+    .catalog-product-grid {
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      gap: 14px;
+    }
+  }
+  @media (min-width: 992px) {
+    .catalog-product-grid {
+      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+      gap: 16px;
+    }
+  }
+
+  .product-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .product-media {
+    height: 130px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    background-color: #EAF3E4;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+  }
+  @media (min-width: 768px) {
+    .product-media { height: 150px; }
+  }
+
+  .product-body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    justify-content: space-between;
+    padding: 10px;
+  }
+  .product-name a {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    line-height: 1.3;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--charcoal);
+  }
+  .product-unit {
+    font-size: 11px;
+    color: var(--charcoal-soft);
+    margin-top: 2px;
+    margin-bottom: 8px;
+  }
+</style>
+{% endblock %}
 
 {% block content %}
-<section class="section" style="padding: 48px 0; min-height: 75vh; display: flex; align-items: center;">
-  <div class="wrap" style="max-width: 480px; margin: 0 auto; width: 100%;">
-    
-    <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 36px 28px; box-shadow: 0 12px 32px rgba(0,0,0,0.04);">
-      
-      <!-- Header -->
-      <div style="text-align: center; margin-bottom: 24px;">
-        <h1 class="display" style="font-size: 26px; font-weight: 700; color: var(--leaf); margin-bottom: 6px;">Register</h1>
-        <p style="color: var(--charcoal-soft); font-size: 13px; margin: 0;">Create your account for fast doorstep delivery in Mumbai.</p>
+<section class="section" style="padding: 24px 0 60px;">
+  <div class="wrap">
+
+    <!-- Header & Results Count -->
+    <div style="display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 16px;">
+      <div>
+        <h1 class="display" style="font-size: 24px; font-weight: 700; margin: 0 0 4px 0;">
+          {% if current_category %}
+            {{ current_category.name }}
+          {% elif request.GET.q %}
+            Search: "{{ request.GET.q }}"
+          {% else %}
+            All Groceries & Essentials
+          {% endif %}
+        </h1>
+        <p style="font-size: 12px; color: var(--charcoal-soft); margin: 0;">
+          Showing {{ products|length }} item{{ products|length|pluralize }}
+        </p>
       </div>
 
-      <form method="POST" action="{% url 'register' %}" onsubmit="return validateRegisterForm()">
-        {% csrf_token %}
-        <input type="hidden" name="next" value="{{ next|default:'home' }}">
-
-        <div style="display: flex; flex-direction: column; gap: 14px;">
-          
-          <!-- Full Name -->
-          <div>
-            <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px;">Full Name *</label>
-            <input 
-              type="text" 
-              name="full_name" 
-              value="{{ full_name|default:'' }}" 
-              required 
-              placeholder="e.g. Rahul Sharma" 
-              style="width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; outline: none;"
-            >
-          </div>
-
-          <!-- 10-Digit Mobile Number -->
-          <div>
-            <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px;">
-              Mobile Number (10 Digits) <span style="color: var(--chili);">*</span>
-            </label>
-            <div style="display: flex; align-items: center; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--mist);">
-              <span style="padding: 0 10px; font-size: 13px; font-weight: 600; color: var(--charcoal-soft); border-right: 1px solid var(--line); background: #EEF2EB;">+91</span>
-              <input 
-                type="tel" 
-                id="phone-input"
-                name="phone" 
-                value="{{ phone|default:'' }}" 
-                required 
-                pattern="[6-9][0-9]{9}" 
-                maxlength="10" 
-                placeholder="9876543210" 
-                oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                style="flex: 1; padding: 10px 12px; border: none; background: transparent; font-size: 14px; outline: none;"
-              >
-            </div>
-            <small style="color: var(--charcoal-soft); font-size: 11px; margin-top: 3px; display: block;">Must be a 10-digit number starting with 6, 7, 8, or 9</small>
-          </div>
-
-          <!-- Email (Optional) -->
-          <div>
-            <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px;">Email Address (Optional)</label>
-            <input 
-              type="email" 
-              name="email" 
-              value="{{ email|default:'' }}" 
-              placeholder="rahul@example.com" 
-              style="width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; outline: none;"
-            >
-          </div>
-
-          <!-- Password -->
-          <div>
-            <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px;">Password (Min. 6 chars) *</label>
-            <input 
-              type="password" 
-              id="password"
-              name="password" 
-              required 
-              minlength="6" 
-              placeholder="••••••••" 
-              style="width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; outline: none;"
-            >
-          </div>
-
-          <!-- Confirm Password -->
-          <div>
-            <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px;">Confirm Password *</label>
-            <input 
-              type="password" 
-              id="confirm_password"
-              name="confirm_password" 
-              required 
-              minlength="6" 
-              placeholder="••••••••" 
-              style="width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; outline: none;"
-            >
-          </div>
-
-          <!-- Submit Button -->
-          <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 14px; justify-content: center; margin-top: 8px;">
-            Create Account →
-          </button>
-
-        </div>
-      </form>
-
-      <!-- Sign In Switcher -->
-      <div style="text-align: center; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line); font-size: 13px; color: var(--charcoal-soft);">
-        Already have an account? 
-        <a href="{% url 'login' %}{% if next %}?next={{ next }}{% endif %}" style="color: var(--leaf); font-weight: 700; text-decoration: underline;">Sign In</a>
-      </div>
-
+      {% if request.GET.q or current_category %}
+        <a href="{% url 'product_list' %}" class="btn btn-secondary" style="font-size: 12px; padding: 4px 10px; min-height: 30px;">
+          Clear Filters ✕
+        </a>
+      {% endif %}
     </div>
+
+    <!-- Horizontal Category Filter Pills -->
+    {% if categories %}
+      <div class="category-filter-scroll">
+        <a href="{% url 'product_list' %}" class="cat-pill-btn {% if not current_category %}active{% endif %}">
+          All
+        </a>
+        {% for cat in categories %}
+          <a href="{% url 'category_detail' cat.id %}" class="cat-pill-btn {% if current_category and current_category.id == cat.id %}active{% endif %}">
+            {{ cat.name }}
+          </a>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <!-- Product Grid -->
+    {% if products %}
+      <div class="catalog-product-grid">
+        {% for product in products %}
+          <div class="product-card">
+            
+            <div class="product-media" style="{% if product.get_image %}background-image: url('{{ product.get_image }}');{% endif %}">
+              {% if product.discounted_price %}
+                <span class="product-tag">OFFER</span>
+              {% endif %}
+            </div>
+
+            <div class="product-body">
+              <div>
+                <div class="product-name">
+                  <a href="{% url 'product_detail' product.id %}">{{ product.name }}</a>
+                </div>
+                <div class="product-unit">{{ product.unit }}</div>
+              </div>
+              
+              <div class="product-footer" style="display: flex; align-items: center; justify-content: space-between; margin-top: 8px;">
+                <div class="product-price">
+                  {% if product.discounted_price %}
+                    <span class="strike">₹{{ product.price }}</span>₹{{ product.discounted_price }}
+                  {% else %}
+                    ₹{{ product.price }}
+                  {% endif %}
+                </div>
+
+                <!-- Zepto Dynamic Quantity Widget -->
+                <div id="cart-widget-{{ product.id }}" class="cart-widget-container" data-product-id="{{ product.id }}">
+                  <button type="button" class="btn-zepto-add" onclick="updateCartWidget({{ product.id }}, 'increase')">ADD</button>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <!-- Empty Catalog State -->
+      <div style="text-align: center; padding: 48px 16px; background: var(--white); border: 1px solid var(--line); border-radius: 16px; max-width: 480px; margin: 20px auto;">
+        <div style="font-size: 40px; margin-bottom: 12px;">🔍</div>
+        <h2 class="display" style="font-size: 18px; font-weight: 600; margin-bottom: 6px;">No products found</h2>
+        <p style="color: var(--charcoal-soft); font-size: 13px; margin-bottom: 20px;">
+          {% if request.GET.q %}
+            We couldn't find anything matching "<strong>{{ request.GET.q }}</strong>". Try searching for everyday items like milk, atta, or bread.
+          {% else %}
+            There are no products listed in this category right now.
+          {% endif %}
+        </p>
+        <a href="{% url 'product_list' %}" class="btn btn-primary" style="padding: 8px 20px; font-size: 13px;">View All Products</a>
+      </div>
+    {% endif %}
 
   </div>
 </section>
 
+<!-- JavaScript Initializer for Cart Widgets -->
 <script>
-function validateRegisterForm() {
-  const phone = document.getElementById('phone-input').value.trim();
-  const pwd = document.getElementById('password').value;
-  const cpwd = document.getElementById('confirm_password').value;
+  document.addEventListener("DOMContentLoaded", function() {
+    try {
+      const cartState = JSON.parse('{{ cart_quantities_json|default:"{}"|safe }}');
 
-  const phoneRegex = /^[6-9]\d{9}$/;
-  if (!phoneRegex.test(phone)) {
-    alert("Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9.");
-    document.getElementById('phone-input').focus();
-    return false;
-  }
+      document.querySelectorAll(".cart-widget-container").forEach(container => {
+        const pId = container.getAttribute("data-product-id");
+        const qty = cartState[pId] || 0;
 
-  if (pwd !== cpwd) {
-    alert("Passwords do not match. Please verify and try again.");
-    document.getElementById('confirm_password').focus();
-    return false;
-  }
-
-  return true;
-}
+        if (qty > 0) {
+          container.innerHTML = `
+            <div class="qty-btn-group">
+              <button type="button" class="qty-btn" onclick="updateCartWidget(${pId}, 'decrease')">-</button>
+              <span class="qty-val">${qty}</span>
+              <button type="button" class="qty-btn" onclick="updateCartWidget(${pId}, 'increase')">+</button>
+            </div>
+          `;
+        }
+      });
+    } catch (err) {
+      console.error("Error initializing cart widgets:", err);
+    }
+  });
 </script>
 {% endblock %}

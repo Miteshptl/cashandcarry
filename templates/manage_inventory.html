@@ -2,60 +2,202 @@
 
 {% block title %}Manage Inventory — CnC{% endblock %}
 
+{% block extra_css %}
+<style>
+  .inventory-header-card {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 18px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  @media (min-width: 600px) {
+    .inventory-header-card {
+      padding: 24px;
+    }
+  }
+
+  .inventory-container-card {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 16px;
+  }
+  @media (min-width: 768px) {
+    .inventory-container-card {
+      padding: 24px;
+    }
+  }
+
+  /* Desktop Table View */
+  .inventory-table-wrapper {
+    display: none;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  @media (min-width: 768px) {
+    .inventory-table-wrapper {
+      display: block;
+    }
+  }
+
+  /* Mobile Responsive Inventory Cards */
+  .inventory-mobile-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  @media (min-width: 768px) {
+    .inventory-mobile-cards {
+      display: none;
+    }
+  }
+
+  .inventory-card-item {
+    background: var(--mist);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .stock-input-mobile {
+    flex: 1;
+    padding: 9px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-size: 16px; /* Prevents auto-zoom on mobile */
+    background: var(--white);
+    color: var(--charcoal);
+    outline: none;
+  }
+  .stock-input-mobile:focus {
+    border-color: var(--leaf);
+  }
+
+  .stock-input-desktop {
+    width: 80px;
+    padding: 6px 10px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    font-size: 13px;
+    background: var(--white);
+    color: var(--charcoal);
+    outline: none;
+  }
+  .stock-input-desktop:focus {
+    border-color: var(--leaf);
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<section class="section">
+<section class="section" style="padding: 24px 0 60px; min-height: 75vh;">
   <div class="wrap">
     
-    <!-- Header -->
-    <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+    <!-- Top Header -->
+    <div class="inventory-header-card">
       <div>
-        <span class="mono" style="font-size: 11px; color: var(--turmeric-dark); font-weight: 600; text-transform: uppercase;">Stock Control</span>
-        <h1 class="display" style="font-size: 26px; color: var(--charcoal); margin-top: 2px;">Product Stock & Inventory</h1>
+        <span class="mono" style="font-size: 11px; color: var(--turmeric-dark); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;">Stock Control</span>
+        <h1 class="display" style="font-size: 22px; color: var(--charcoal); margin-top: 2px; margin-bottom: 0;">Product Stock &amp; Inventory</h1>
       </div>
-      <a href="{% url 'dashboard' %}" class="btn btn-secondary" style="font-size: 13px;">← Back to Dashboard</a>
+      <a href="{% url 'dashboard' %}" class="btn btn-secondary" style="font-size: 12px; padding: 7px 14px; min-height: 36px;">
+        ← Back to Dashboard
+      </a>
     </div>
 
-    <!-- Inventory Table Card -->
-    <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px; overflow-x: auto;">
-      <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
-        <thead>
-          <tr style="border-bottom: 2px solid var(--line); color: var(--charcoal-soft); text-transform: uppercase; font-size: 11px;" class="mono">
-            <th style="padding: 12px;">Product Name</th>
-            <th style="padding: 12px;">Category</th>
-            <th style="padding: 12px;">Available Qty</th>
-            <th style="padding: 12px;">Status</th>
-            <th style="padding: 12px; text-align: right;">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for item in inventory_items %}
-          <tr style="border-bottom: 1px solid var(--line);">
-            <td style="padding: 14px; font-weight: 600;">{{ item.product.name }}</td>
-            <td style="padding: 14px; color: var(--charcoal-soft);">{{ item.product.category.name }}</td>
-            <td style="padding: 14px;" class="mono font-bold">{{ item.available_quantity }}</td>
-            <td style="padding: 14px;">
-              {% if item.available_quantity < 5 %}
-                <span class="mono" style="font-size: 10px; background: rgba(216, 73, 46, 0.1); color: var(--chili); padding: 4px 8px; border-radius: 4px; font-weight: 600;">LOW STOCK</span>
-              {% else %}
-                <span class="mono" style="font-size: 10px; background: rgba(47, 107, 79, 0.1); color: var(--leaf); padding: 4px 8px; border-radius: 4px; font-weight: 600;">IN STOCK</span>
-              {% endif %}
-            </td>
-            <td style="padding: 14px; text-align: right;">
-              <form method="post" style="display: inline-flex; gap: 6px; align-items: center;">
-                {% csrf_token %}
-                <input type="hidden" name="product_id" value="{{ item.product.id }}">
-                <input type="number" name="quantity" value="{{ item.available_quantity }}" min="0" style="width: 70px; padding: 6px; border: 1px solid var(--line); border-radius: 6px; font-family: 'IBM Plex Mono';" required>
-                <button type="submit" class="btn btn-primary" style="padding: 6px 12px; font-size: 12px;">Update</button>
-              </form>
-            </td>
-          </tr>
-          {% empty %}
-          <tr>
-            <td colspan="5" style="padding: 20px; text-align: center; color: var(--charcoal-soft);">No inventory records found.</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+    <!-- Inventory Container Card -->
+    <div class="inventory-container-card">
+      
+      <!-- 1. DESKTOP VIEW: Full Data Table -->
+      <div class="inventory-table-wrapper">
+        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
+          <thead>
+            <tr style="border-bottom: 2px solid var(--line); color: var(--charcoal-soft); text-transform: uppercase; font-size: 11px;" class="mono">
+              <th style="padding: 12px 10px;">Product Name</th>
+              <th style="padding: 12px 10px;">Category</th>
+              <th style="padding: 12px 10px;">Available Qty</th>
+              <th style="padding: 12px 10px;">Status</th>
+              <th style="padding: 12px 10px; text-align: right;">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in inventory_items %}
+            <tr style="border-bottom: 1px solid var(--line);">
+              <td style="padding: 14px 10px; font-weight: 600;">{{ item.product.name }}</td>
+              <td style="padding: 14px 10px; color: var(--charcoal-soft);">{{ item.product.category.name|default:"Uncategorized" }}</td>
+              <td style="padding: 14px 10px;" class="mono font-bold">{{ item.available_quantity }}</td>
+              <td style="padding: 14px 10px;">
+                {% if item.available_quantity < 5 %}
+                  <span class="mono" style="font-size: 10px; background: rgba(216, 73, 46, 0.1); color: var(--chili); padding: 4px 8px; border-radius: 4px; font-weight: 600;">LOW STOCK</span>
+                {% else %}
+                  <span class="mono" style="font-size: 10px; background: rgba(47, 107, 79, 0.1); color: var(--leaf); padding: 4px 8px; border-radius: 4px; font-weight: 600;">IN STOCK</span>
+                {% endif %}
+              </td>
+              <td style="padding: 14px 10px; text-align: right;">
+                <form id="inv-form-{{ item.product.id }}" method="post" style="display: none;">
+                  {% csrf_token %}
+                  <input type="hidden" name="product_id" value="{{ item.product.id }}">
+                </form>
+                <div style="display: inline-flex; gap: 6px; align-items: center;">
+                  <input type="number" name="quantity" form="inv-form-{{ item.product.id }}" value="{{ item.available_quantity }}" min="0" class="mono stock-input-desktop" required>
+                  <button type="submit" form="inv-form-{{ item.product.id }}" class="btn btn-primary" style="padding: 6px 12px; font-size: 12px; min-height: 32px;">Update</button>
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="5" style="padding: 24px; text-align: center; color: var(--charcoal-soft);">No inventory records found.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 2. MOBILE VIEW: Responsive Stock Cards -->
+      <div class="inventory-mobile-cards">
+        {% for item in inventory_items %}
+          <div class="inventory-card-item">
+            <!-- Header Row: Name & Status Badge -->
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
+              <div>
+                <strong style="color: var(--charcoal); font-size: 14px;">{{ item.product.name }}</strong>
+                <div style="font-size: 11px; color: var(--charcoal-soft); margin-top: 2px;">{{ item.product.category.name|default:"Uncategorized" }}</div>
+              </div>
+              <div>
+                {% if item.available_quantity < 5 %}
+                  <span class="mono" style="font-size: 10px; background: rgba(216, 73, 46, 0.1); color: var(--chili); padding: 3px 6px; border-radius: 4px; font-weight: 700;">LOW STOCK</span>
+                {% else %}
+                  <span class="mono" style="font-size: 10px; background: rgba(47, 107, 79, 0.1); color: var(--leaf); padding: 3px 6px; border-radius: 4px; font-weight: 700;">IN STOCK</span>
+                {% endif %}
+              </div>
+            </div>
+
+            <!-- Current Count & Update Form -->
+            <form method="post" style="display: flex; gap: 8px; align-items: center; margin-top: 4px;">
+              {% csrf_token %}
+              <input type="hidden" name="product_id" value="{{ item.product.id }}">
+              
+              <input type="number" name="quantity" value="{{ item.available_quantity }}" min="0" class="mono stock-input-mobile" required>
+              <button type="submit" class="btn btn-primary" style="padding: 9px 16px; font-size: 13px; min-height: 42px;">
+                Update Qty
+              </button>
+            </form>
+          </div>
+        {% empty %}
+          <div style="padding: 24px; text-align: center; color: var(--charcoal-soft); font-size: 13px;">
+            No inventory records found.
+          </div>
+        {% endfor %}
+      </div>
+
     </div>
 
   </div>

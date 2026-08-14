@@ -2,49 +2,169 @@
 
 {% block title %}Security Audit Logs — CnC{% endblock %}
 
+{% block extra_css %}
+<style>
+  .audit-header-card {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 18px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  @media (min-width: 600px) {
+    .audit-header-card {
+      padding: 24px;
+    }
+  }
+
+  .audit-container {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 16px;
+  }
+  @media (min-width: 768px) {
+    .audit-container {
+      padding: 24px;
+    }
+  }
+
+  /* Desktop Table View */
+  .audit-table-wrapper {
+    display: none;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  @media (min-width: 768px) {
+    .audit-table-wrapper {
+      display: block;
+    }
+  }
+
+  /* Mobile Stacked Card View */
+  .audit-mobile-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  @media (min-width: 768px) {
+    .audit-mobile-cards {
+      display: none;
+    }
+  }
+
+  .audit-log-card {
+    background: var(--mist);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: 12px;
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<section class="section">
+<section class="section" style="padding: 24px 0 60px; min-height: 75vh;">
   <div class="wrap">
     
-    <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center;">
+    <!-- Header -->
+    <div class="audit-header-card">
       <div>
-        <span class="mono" style="font-size: 11px; color: var(--chili); font-weight: 600; text-transform: uppercase;">ADMIN ONLY</span>
-        <h1 class="display" style="font-size: 26px; color: var(--charcoal); margin-top: 2px;">Security & Action Audit Logs</h1>
+        <span class="mono" style="font-size: 11px; color: var(--chili); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;">ADMIN ONLY</span>
+        <h1 class="display" style="font-size: 22px; color: var(--charcoal); margin-top: 2px; margin-bottom: 0;">Security &amp; Action Audit Logs</h1>
       </div>
-      <a href="{% url 'dashboard' %}" class="btn btn-secondary" style="font-size: 13px;">← Back to Dashboard</a>
+      <a href="{% url 'dashboard' %}" class="btn btn-secondary" style="font-size: 12px; padding: 7px 14px; min-height: 36px;">
+        ← Back to Dashboard
+      </a>
     </div>
 
-    <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px; overflow-x: auto;">
-      <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 12px;">
-        <thead>
-          <tr style="border-bottom: 2px solid var(--line); color: var(--charcoal-soft); text-transform: uppercase;" class="mono">
-            <th style="padding: 10px;">Timestamp</th>
-            <th style="padding: 10px;">User</th>
-            <th style="padding: 10px;">Action</th>
-            <th style="padding: 10px;">Entity</th>
-            <th style="padding: 10px;">Field</th>
-            <th style="padding: 10px;">Old Value</th>
-            <th style="padding: 10px;">New Value</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for log in audit_logs %}
-          <tr style="border-bottom: 1px solid var(--line);" class="mono">
-            <td style="padding: 12px; color: var(--charcoal-soft);">{{ log.created_at|date:"Y-m-d H:i:s" }}</td>
-            <td style="padding: 12px; font-weight: 600;">{{ log.user.username|default:"System" }}</td>
-            <td style="padding: 12px;"><span style="background: var(--mist); border: 1px solid var(--line); padding: 2px 6px; border-radius: 4px;">{{ log.action }}</span></td>
-            <td style="padding: 12px;">{{ log.entity_type }} #{{ log.entity_id }}</td>
-            <td style="padding: 12px;">{{ log.field_changed|default:"—" }}</td>
-            <td style="padding: 12px; color: var(--chili);">{{ log.old_value|default:"—" }}</td>
-            <td style="padding: 12px; color: var(--leaf);">{{ log.new_value|default:"—" }}</td>
-          </tr>
-          {% empty %}
-          <tr>
-            <td colspan="7" style="padding: 20px; text-align: center; color: var(--charcoal-soft);">No security logs recorded.</td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+    <!-- Main Container -->
+    <div class="audit-container">
+
+      <!-- 1. DESKTOP VIEW: Full Data Table -->
+      <div class="audit-table-wrapper">
+        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 12px;">
+          <thead>
+            <tr style="border-bottom: 2px solid var(--line); color: var(--charcoal-soft); text-transform: uppercase;" class="mono">
+              <th style="padding: 10px;">Timestamp</th>
+              <th style="padding: 10px;">User</th>
+              <th style="padding: 10px;">Action</th>
+              <th style="padding: 10px;">Entity</th>
+              <th style="padding: 10px;">Field</th>
+              <th style="padding: 10px;">Old Value</th>
+              <th style="padding: 10px;">New Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for log in audit_logs %}
+            <tr style="border-bottom: 1px solid var(--line);" class="mono">
+              <td style="padding: 12px; color: var(--charcoal-soft); white-space: nowrap;">{{ log.created_at|date:"Y-m-d H:i:s" }}</td>
+              <td style="padding: 12px; font-weight: 600; white-space: nowrap;">{{ log.user.username|default:"System" }}</td>
+              <td style="padding: 12px; white-space: nowrap;"><span style="background: var(--mist); border: 1px solid var(--line); padding: 2px 6px; border-radius: 4px;">{{ log.action }}</span></td>
+              <td style="padding: 12px; white-space: nowrap;">{{ log.entity_type }} #{{ log.entity_id }}</td>
+              <td style="padding: 12px; white-space: nowrap;">{{ log.field_changed|default:"—" }}</td>
+              <td style="padding: 12px; color: var(--chili); max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ log.old_value|default:"—" }}</td>
+              <td style="padding: 12px; color: var(--leaf); max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">{{ log.new_value|default:"—" }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="7" style="padding: 24px; text-align: center; color: var(--charcoal-soft);">No security logs recorded.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 2. MOBILE VIEW: Responsive Stacked Cards -->
+      <div class="audit-mobile-cards">
+        {% for log in audit_logs %}
+          <div class="audit-log-card mono">
+            <!-- Card Header -->
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed var(--line); padding-bottom: 6px;">
+              <span style="font-weight: 700; color: var(--charcoal);">👤 {{ log.user.username|default:"System" }}</span>
+              <span style="background: var(--white); border: 1px solid var(--line); padding: 2px 6px; border-radius: 4px; font-size: 10px; text-transform: uppercase;">{{ log.action }}</span>
+            </div>
+
+            <!-- Target Entity & Field -->
+            <div style="display: flex; justify-content: space-between; font-size: 11px;">
+              <span style="color: var(--charcoal-soft);">Entity: <strong>{{ log.entity_type }} #{{ log.entity_id }}</strong></span>
+              <span>Field: <strong>{{ log.field_changed|default:"—" }}</strong></span>
+            </div>
+
+            <!-- Value Changes -->
+            {% if log.old_value or log.new_value %}
+              <div style="display: flex; flex-direction: column; gap: 4px; background: var(--white); padding: 8px; border-radius: 6px; border: 1px solid var(--line); font-size: 11px;">
+                <div style="display: flex; justify-content: space-between; gap: 8px;">
+                  <span style="color: var(--charcoal-soft);">Before:</span>
+                  <span style="color: var(--chili); text-align: right; word-break: break-all;">{{ log.old_value|default:"—" }}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; gap: 8px; border-top: 1px dashed var(--line); padding-top: 4px;">
+                  <span style="color: var(--charcoal-soft);">After:</span>
+                  <span style="color: var(--leaf); text-align: right; word-break: break-all;">{{ log.new_value|default:"—" }}</span>
+                </div>
+              </div>
+            {% endif %}
+
+            <!-- Timestamp -->
+            <div style="font-size: 10px; color: #8A9188; text-align: right;">
+              🕒 {{ log.created_at|date:"Y-m-d H:i:s" }}
+            </div>
+          </div>
+        {% empty %}
+          <div style="padding: 24px; text-align: center; color: var(--charcoal-soft); font-size: 13px;">
+            No security logs recorded.
+          </div>
+        {% endfor %}
+      </div>
+
     </div>
 
   </div>

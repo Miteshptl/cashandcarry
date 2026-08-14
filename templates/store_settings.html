@@ -2,32 +2,76 @@
 
 {% block title %}Store Operating Configuration — CnC{% endblock %}
 
+{% block extra_css %}
+<style>
+  .settings-card-wrapper {
+    max-width: 540px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .settings-card {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 20px 16px;
+  }
+  @media (min-width: 600px) {
+    .settings-card {
+      padding: 32px;
+    }
+  }
+
+  .settings-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-size: 16px; /* Prevents auto-zoom on mobile */
+    background: var(--white);
+    color: var(--charcoal);
+    outline: none;
+    transition: border-color 0.2s ease;
+  }
+  @media (min-width: 600px) {
+    .settings-input {
+      font-size: 14px;
+    }
+  }
+  .settings-input:focus {
+    border-color: var(--leaf);
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<section class="section">
-  <div class="wrap">
+<section class="section" style="padding: 24px 0 60px; min-height: 70vh;">
+  <div class="wrap settings-card-wrapper">
     
-    <div style="max-width: 540px; margin: 0 auto; background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 32px;">
-      <span class="mono" style="font-size: 11px; color: var(--turmeric-dark); font-weight: 600; text-transform: uppercase;">Store Parameters</span>
-      <h1 class="display" style="font-size: 24px; color: var(--charcoal); margin-top: 2px; margin-bottom: 20px;">Hours & Cutoff Times</h1>
+    <div class="settings-card">
+      <span class="mono" style="font-size: 11px; color: var(--turmeric-dark); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;">Store Parameters</span>
+      <h1 class="display" style="font-size: 22px; color: var(--charcoal); margin-top: 2px; margin-bottom: 18px;">Hours &amp; Cutoff Times</h1>
 
       <form method="post" style="display: flex; flex-direction: column; gap: 16px;">
         {% csrf_token %}
         <div>
-          <label style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--charcoal-soft); display: block; margin-bottom: 6px;">Store Opening Time (24h)</label>
-          <input type="text" name="open_time" value="{{ settings.open_time|default:'09:00' }}" required style="width: 100%; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px;" class="mono">
+          <label style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--charcoal-soft); display: block; margin-bottom: 6px;">Store Opening Time (24h)</label>
+          <input type="text" name="open_time" value="{{ settings.open_time|default:'09:00' }}" required class="mono settings-input" placeholder="09:00">
         </div>
 
         <div>
-          <label style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--charcoal-soft); display: block; margin-bottom: 6px;">Store Closing Time (24h)</label>
-          <input type="text" name="close_time" value="{{ settings.close_time|default:'22:00' }}" required style="width: 100%; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px;" class="mono">
+          <label style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--charcoal-soft); display: block; margin-bottom: 6px;">Store Closing Time (24h)</label>
+          <input type="text" name="close_time" value="{{ settings.close_time|default:'22:00' }}" required class="mono settings-input" placeholder="22:00">
         </div>
 
         <div>
-          <label style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--charcoal-soft); display: block; margin-bottom: 6px;">Instant Delivery Cutoff Time (24h)</label>
-          <input type="text" name="instant_cutoff_time" value="{{ settings.instant_cutoff_time|default:'21:45' }}" required style="width: 100%; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px;" class="mono">
+          <label style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--charcoal-soft); display: block; margin-bottom: 6px;">Instant Delivery Cutoff Time (24h)</label>
+          <input type="text" name="instant_cutoff_time" value="{{ settings.instant_cutoff_time|default:'21:45' }}" required class="mono settings-input" placeholder="21:45">
         </div>
 
-        <button type="submit" class="btn btn-primary" style="justify-content: center; padding: 12px;">Save Configurations</button>
+        <button type="submit" class="btn btn-primary" style="justify-content: center; padding: 12px; font-size: 14px; min-height: 44px; margin-top: 4px;">
+          Save Configurations
+        </button>
       </form>
     </div>
 

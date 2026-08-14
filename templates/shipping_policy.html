@@ -2,16 +2,79 @@
 
 {% block title %}Shipping & Delivery Policy — CnC{% endblock %}
 
+{% block extra_css %}
+<style>
+  .policy-card {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 20px 16px;
+    max-width: 820px;
+    margin: 0 auto;
+    line-height: 1.7;
+  }
+  @media (min-width: 600px) {
+    .policy-card {
+      padding: 32px 28px;
+    }
+  }
+  @media (min-width: 768px) {
+    .policy-card {
+      padding: 40px;
+    }
+  }
+
+  .policy-heading {
+    font-size: 24px;
+    margin-top: 4px;
+    color: var(--charcoal);
+    line-height: 1.2;
+  }
+  @media (min-width: 600px) {
+    .policy-heading {
+      font-size: 28px;
+    }
+  }
+  @media (min-width: 768px) {
+    .policy-heading {
+      font-size: 32px;
+    }
+  }
+
+  .policy-footer-action {
+    margin-top: 32px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+  }
+  @media (max-width: 599px) {
+    .policy-footer-action {
+      flex-direction: column;
+      align-items: stretch;
+      text-align: center;
+    }
+    .policy-footer-action .btn {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<section class="section">
+<section class="section" style="padding: 24px 0 60px;">
   <div class="wrap">
-    <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 40px; max-width: 820px; margin: 0 auto; line-height: 1.7;">
+    <div class="policy-card">
       
       <!-- Page Header -->
-      <div style="border-bottom: 1px solid var(--line); padding-bottom: 20px; margin-bottom: 28px;">
-        <span class="mono" style="font-size: 12px; color: var(--turmeric-dark); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Customer Care</span>
-        <h1 class="display" style="font-size: 32px; margin-top: 4px; color: var(--charcoal);">Shipping & Delivery Policy</h1>
-        <div class="mono" style="font-size: 12px; color: var(--charcoal-soft); margin-top: 6px;">
+      <div style="border-bottom: 1px solid var(--line); padding-bottom: 16px; margin-bottom: 24px;">
+        <span class="mono" style="font-size: 11px; color: var(--turmeric-dark); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Customer Care</span>
+        <h1 class="display policy-heading">Shipping &amp; Delivery Policy</h1>
+        <div class="mono" style="font-size: 11px; color: var(--charcoal-soft); margin-top: 6px;">
           OPERATIONAL HOURS: DAILY 9:00 AM – 10:00 PM
         </div>
       </div>
@@ -21,7 +84,7 @@
         
         <!-- Section 1 -->
         <div>
-          <h2 class="display" style="font-size: 20px; color: var(--leaf); margin-bottom: 8px;">1. Service Availability & Pincodes</h2>
+          <h2 class="display" style="font-size: 18px; color: var(--leaf); margin-bottom: 8px;">1. Service Availability &amp; Pincodes</h2>
           <p>
             CnC Supermarket delivers groceries and household essentials across selected pincodes in Mumbai. Orders can only be placed for addresses within our active service zones (e.g., <strong>Pincode 400001</strong>). You can check instant availability using the location indicator in the website header.
           </p>
@@ -29,14 +92,14 @@
 
         <!-- Section 2 -->
         <div>
-          <h2 class="display" style="font-size: 20px; color: var(--leaf); margin-bottom: 8px;">2. Delivery Modes & Timelines</h2>
-          <div style="background: var(--mist); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-top: 8px;">
+          <h2 class="display" style="font-size: 18px; color: var(--leaf); margin-bottom: 8px;">2. Delivery Modes &amp; Timelines</h2>
+          <div style="background: var(--mist); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin-top: 8px;">
             <div style="margin-bottom: 12px;">
-              <strong style="color: var(--charcoal); display: block; font-size: 15px;">⚡ Instant Delivery</strong>
+              <strong style="color: var(--charcoal); display: block; font-size: 14px; margin-bottom: 2px;">⚡ Instant Delivery</strong>
               <span>Delivered within <strong>20 to 45 minutes</strong> of order placement. Instant orders are accepted daily until the cutoff time of <strong>9:45 PM</strong>.</span>
             </div>
             <div style="border-top: 1px dashed var(--line); padding-top: 12px;">
-              <strong style="color: var(--charcoal); display: block; font-size: 15px;">📅 Scheduled Delivery</strong>
+              <strong style="color: var(--charcoal); display: block; font-size: 14px; margin-bottom: 2px;">📅 Scheduled Delivery</strong>
               <span>Choose a preferred 2-hour delivery slot for same-day or next-day fulfillment at no extra delivery cost.</span>
             </div>
           </div>
@@ -44,7 +107,7 @@
 
         <!-- Section 3 -->
         <div>
-          <h2 class="display" style="font-size: 20px; color: var(--leaf); margin-bottom: 8px;">3. Delivery Charges</h2>
+          <h2 class="display" style="font-size: 18px; color: var(--leaf); margin-bottom: 8px;">3. Delivery Charges</h2>
           <ul style="list-style-type: disc; padding-left: 20px; display: flex; flex-direction: column; gap: 6px;">
             <li><strong>Instant Delivery Fee:</strong> Flat <strong>₹29</strong> per order.</li>
             <li><strong>Scheduled Delivery Fee:</strong> <strong>FREE</strong> for all eligible scheduled orders.</li>
@@ -54,7 +117,7 @@
 
         <!-- Section 4 -->
         <div>
-          <h2 class="display" style="font-size: 20px; color: var(--leaf); margin-bottom: 8px;">4. Order Status & Receiving</h2>
+          <h2 class="display" style="font-size: 18px; color: var(--leaf); margin-bottom: 8px;">4. Order Status &amp; Receiving</h2>
           <p>
             You can check the status of your order anytime in your account dashboard as it progresses from <em>"Pending Acceptance"</em> to <em>"Out for Delivery"</em>. Please ensure someone is available at the specified delivery address to receive perishable items (e.g., milk, dairy, fresh vegetables) once your order is dispatched.
           </p>
@@ -62,7 +125,7 @@
 
         <!-- Section 5 -->
         <div>
-          <h2 class="display" style="font-size: 20px; color: var(--leaf); margin-bottom: 8px;">5. Unsuccessful Delivery Attempts</h2>
+          <h2 class="display" style="font-size: 18px; color: var(--leaf); margin-bottom: 8px;">5. Unsuccessful Delivery Attempts</h2>
           <p>
             If our delivery partner is unable to reach you due to an incorrect phone number, incorrect address, or unattended delivery site, the order will be returned to our fulfillment hub. Perishable items may not be eligible for re-dispatch or refund in cases of customer unavailability.
           </p>
@@ -71,9 +134,9 @@
       </div>
 
       <!-- Support Footer Box -->
-      <div style="margin-top: 36px; padding-top: 24px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+      <div class="policy-footer-action">
         <span style="font-size: 13px; color: var(--charcoal-soft);">Have questions about a live order?</span>
-        <a href="{% url 'about' %}" class="btn btn-secondary" style="border-color: var(--leaf); color: var(--leaf);">Contact Support</a>
+        <a href="{% url 'about' %}" class="btn btn-secondary" style="border-color: var(--leaf); color: var(--leaf); min-height: 40px; padding: 9px 18px; font-size: 13px;">Contact Support</a>
       </div>
 
     </div>

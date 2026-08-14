@@ -71,14 +71,16 @@ urlpatterns = [
     path('manage/store-settings/', views.store_settings, name='store_settings'),
     path('manage/audit-logs/', views.audit_logs, name='audit_logs'),
 
-    # 👈 Admin & Staff Dashboard Routes
+    # Admin & Staff Dashboard Routes
     path('dashboard/', views.dashboard, name='dashboard'),
     path('dashboard/live-orders/', views.live_orders, name='live_orders'),
     path('dashboard/refunds/', views.manage_refunds, name='manage_refunds'),
+    path('dashboard/staff/', views.staff_management, name='staff_management'),
 
+    path('login/', views.login_view, name='login'),
+    path('accounts/login/', views.login_view),
     path('register/', views.register, name='register'),
+    path('logout/', views.logout_view, name='logout'),
     path('accounts/login/', views.user_login, name='login'),
-    path('accounts/logout/', views.user_logout, name='logout'),
-    path('logout/', views.user_logout, name='logout'),
 ]
 

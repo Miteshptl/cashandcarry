@@ -2,49 +2,158 @@
 
 {% block title %}{{ product.name }} — CnC Express{% endblock %}
 
+{% block extra_css %}
+<style>
+  .product-detail-card {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    align-items: stretch;
+  }
+  @media (min-width: 768px) {
+    .product-detail-card {
+      flex-direction: row;
+      padding: 32px;
+      gap: 32px;
+      align-items: center;
+    }
+  }
+
+  .product-img-stage {
+    width: 100%;
+    height: 240px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--mist);
+    border-radius: 12px;
+    padding: 14px;
+    flex-shrink: 0;
+  }
+  @media (min-width: 576px) {
+    .product-img-stage {
+      height: 300px;
+    }
+  }
+  @media (min-width: 768px) {
+    .product-img-stage {
+      flex: 1;
+      height: 360px;
+      padding: 20px;
+    }
+  }
+
+  .product-info-column {
+    flex: 1.2;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  /* Sticky Mobile Add to Cart Bar */
+  .mobile-pdp-sticky-bar {
+    display: none;
+  }
+  @media (max-width: 767px) {
+    .mobile-pdp-sticky-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--white);
+      border-top: 1px solid var(--line);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      z-index: 99;
+      box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.06);
+    }
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<section class="section">
+<section class="section" style="padding: 24px 0 60px;">
   <div class="wrap">
-    <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 32px;" class="d-flex flex-column flex-md-row gap-4 align-items-center">
+
+    <!-- Breadcrumb back link -->
+    <div style="margin-bottom: 14px;">
+      <a href="{% url 'home' %}" style="font-size: 12px; color: var(--charcoal-soft); font-weight: 500;">
+        ← Back to Store
+      </a>
+    </div>
+
+    <div class="product-detail-card">
       
       <!-- Image Frame (Uncropped, Full Fit) -->
-      <div style="flex: 1; height: 350px; width: 100%; display: flex; align-items: center; justify-content: center; background: var(--mist); border-radius: 12px; padding: 16px;">
-        <img src="{{ product.get_image }}" alt="{{ product.name }}" style="max-height: 100%; max-width: 100%; object-fit: contain;">
+      <div class="product-img-stage">
+        {% if product.get_image %}
+          <img src="{{ product.get_image }}" alt="{{ product.name }}" style="max-height: 100%; max-width: 100%; object-fit: contain;">
+        {% else %}
+          <span style="font-size: 48px;">🛒</span>
+        {% endif %}
       </div>
 
-      <!-- Details -->
-      <div style="flex: 1.2;">
+      <!-- Details Column -->
+      <div class="product-info-column">
         {% if product.brand %}
-          <span class="mono" style="font-size: 11px; color: var(--turmeric-dark); font-weight: 600; text-transform: uppercase;">{{ product.brand }}</span>
+          <span class="mono" style="font-size: 11px; color: var(--turmeric-dark); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;">{{ product.brand }}</span>
         {% endif %}
         
-        <h1 class="display" style="font-size: 28px; color: var(--charcoal); margin-top: 4px; margin-bottom: 4px;">{{ product.name }}</h1>
-        <div style="font-size: 13px; color: var(--charcoal-soft); margin-bottom: 16px;">Unit: {{ product.unit }}</div>
+        <h1 class="display" style="font-size: 24px; color: var(--charcoal); margin-top: 4px; margin-bottom: 4px; line-height: 1.2;">{{ product.name }}</h1>
+        <div style="font-size: 13px; color: var(--charcoal-soft); margin-bottom: 14px;">Unit: {{ product.unit }}</div>
 
-        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
+        <!-- Pricing Row -->
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
           {% if product.discounted_price %}
             <span class="mono" style="font-size: 24px; font-weight: 700; color: var(--leaf);">₹{{ product.discounted_price }}</span>
             <span class="mono strike" style="font-size: 16px; color: var(--charcoal-soft); text-decoration: line-through;">₹{{ product.price }}</span>
-            <span style="font-size: 11px; background: rgba(216, 73, 46, 0.1); color: var(--chili); border: 1px solid var(--chili); padding: 2px 8px; border-radius: 4px; font-weight: 600;">OFFER</span>
+            <span style="font-size: 10px; background: rgba(216, 73, 46, 0.1); color: var(--chili); border: 1px solid var(--chili); padding: 2px 7px; border-radius: 4px; font-weight: 700;">OFFER</span>
           {% else %}
             <span class="mono" style="font-size: 24px; font-weight: 700; color: var(--charcoal);">₹{{ product.price }}</span>
           {% endif %}
         </div>
 
         {% if product.description %}
-          <div style="margin-bottom: 24px; border-top: 1px solid var(--line); padding-top: 16px;">
+          <div style="margin-bottom: 20px; border-top: 1px solid var(--line); padding-top: 14px;">
             <h6 style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--charcoal-soft); margin-bottom: 6px;">Description</h6>
-            <p style="font-size: 14px; color: var(--charcoal); line-height: 1.6;">{{ product.description }}</p>
+            <p style="font-size: 13px; color: var(--charcoal); line-height: 1.6; margin: 0;">{{ product.description }}</p>
           </div>
         {% endif %}
 
-        <div style="display: flex; gap: 12px;">
-            <button type="button" class="btn btn-primary" style="padding: 12px 24px;" onclick="addToCart({{ product.id }})">  + Add to Cart</button>
-            <a href="{% url 'cart' %}" class="btn btn-secondary" style="padding: 12px 24px;">View Cart</a>
+        <!-- Desktop Action Buttons -->
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <button type="button" class="btn btn-primary" style="padding: 11px 22px; font-size: 14px;" onclick="updateCartWidget({{ product.id }}, 'increase')">
+            + Add to Cart
+          </button>
+          <a href="{% url 'cart' %}" class="btn btn-secondary" style="padding: 11px 22px; font-size: 14px;">
+            View Cart
+          </a>
         </div>
+
       </div>
 
     </div>
+
+    <!-- Mobile Floating Add to Cart Bar -->
+    <div class="mobile-pdp-sticky-bar">
+      <div>
+        <span style="font-size: 11px; color: var(--charcoal-soft); display: block;">Price</span>
+        <span class="mono" style="font-size: 17px; font-weight: 700; color: var(--leaf);">
+          {% if product.discounted_price %}₹{{ product.discounted_price }}{% else %}₹{{ product.price }}{% endif %}
+        </span>
+      </div>
+      <button type="button" class="btn btn-primary" style="padding: 10px 22px; font-size: 13px;" onclick="updateCartWidget({{ product.id }}, 'increase')">
+        + Add to Cart
+      </button>
+    </div>
+
   </div>
 </section>
 {% endblock %}

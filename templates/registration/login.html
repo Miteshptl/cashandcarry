@@ -3,68 +3,58 @@
 {% block title %}Sign In — CnC Supermarket{% endblock %}
 
 {% block content %}
-<section class="section" style="padding: 48px 0; min-height: 75vh; display: flex; align-items: center;">
-  <div class="wrap" style="max-width: 440px; margin: 0 auto; width: 100%;">
-    
-    <div style="background: var(--white); border: 1px solid var(--line); border-radius: 20px; padding: 36px 32px; box-shadow: 0 4px 20px rgba(0,0,0,0.04);">
+<section class="section" style="padding: 40px 0 80px; min-height: 75vh;">
+  <div class="wrap" style="max-width: 440px; margin: 0 auto;">
+    <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 32px 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
       
-      <!-- Brand Header -->
-      <div style="text-align: center; margin-bottom: 28px;">
-        <div style="font-size: 36px; margin-bottom: 8px;">🔐</div>
-        <h1 class="display" style="font-size: 24px; font-weight: 700; margin: 0 0 6px 0;">Welcome Back</h1>
-        <p style="color: var(--charcoal-soft); font-size: 13px; margin: 0;">Sign in with your registered mobile number to continue.</p>
+      <div style="text-align: center; margin-bottom: 24px;">
+        <span class="mono" style="font-size: 11px; color: var(--turmeric-dark); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Welcome Back</span>
+        <h1 class="display" style="font-size: 24px; color: var(--charcoal); margin: 4px 0 6px;">Sign In to CnC</h1>
+        <p style="color: var(--charcoal-soft); font-size: 13px;">Enter your registered 10-digit mobile number or email</p>
       </div>
 
-      <form method="POST" action="{% url 'login' %}">
+      <form method="POST" action="{% url 'login' %}" style="display: flex; flex-direction: column; gap: 16px;">
         {% csrf_token %}
-        <input type="hidden" name="next" value="{{ next }}">
-
-        <div style="display: flex; flex-direction: column; gap: 16px;">
-          
-          <!-- Mobile Number or Username -->
-          <div>
-            <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px;">Registered Mobile Number *</label>
-            <input 
-              type="text" 
-              name="login_identifier" 
-              value="{{ login_identifier|default:'' }}" 
-              required 
-              maxlength="10"
-              placeholder="e.g. 9876543210" 
-              style="width: 100%; padding: 11px 14px; border: 1px solid var(--line); border-radius: 10px; font-size: 14px;"
-            >
-          </div>
-
-          <!-- Password -->
-          <div>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-              <label style="font-size: 12px; font-weight: 600; margin: 0;">Password *</label>
-            </div>
-            <input 
-              type="password" 
-              name="password" 
-              required 
-              placeholder="••••••••" 
-              style="width: 100%; padding: 11px 14px; border: 1px solid var(--line); border-radius: 10px; font-size: 14px;"
-            >
-          </div>
-
-          <!-- Submit Button -->
-          <button type="submit" class="btn btn-primary" style="width: 100%; padding: 13px; font-size: 14px; justify-content: center; margin-top: 6px;">
-            Sign In →
-          </button>
-
+        <input type="hidden" name="next" value="{{ next|default:'' }}">
+        
+        <div>
+          <label style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--charcoal-soft); margin-bottom: 6px;" class="mono">
+            Mobile Number / Email *
+          </label>
+          <input 
+            type="text" 
+            name="username" 
+            value="{{ identifier|default:'' }}"
+            placeholder="e.g. 9876543210" 
+            required 
+            autocomplete="username" 
+            class="mono"
+            style="width: 100%; padding: 11px 14px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; background: var(--mist); outline: none; color: var(--charcoal);">
         </div>
+
+        <div>
+          <label style="display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--charcoal-soft); margin-bottom: 6px;" class="mono">
+            Password *
+          </label>
+          <input 
+            type="password" 
+            name="password" 
+            placeholder="••••••••" 
+            required 
+            autocomplete="current-password" 
+            style="width: 100%; padding: 11px 14px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px; background: var(--mist); outline: none; color: var(--charcoal);">
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 12px; font-size: 14px; font-weight: 700; margin-top: 4px; min-height: 44px;">
+          Sign In
+        </button>
       </form>
 
-      <!-- Footer Links -->
-      <div style="text-align: center; margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--line); font-size: 13px; color: var(--charcoal-soft);">
-        New to CnC Supermarket? 
-        <a href="{% url 'register' %}?next={{ next }}" style="color: var(--leaf); font-weight: 700; text-decoration: underline;">Create Account</a>
+      <div style="text-align: center; margin-top: 20px; font-size: 13px; color: var(--charcoal-soft); border-top: 1px dashed var(--line); padding-top: 16px;">
+        New to CnC? <a href="{% url 'register' %}" style="color: var(--leaf); font-weight: 700;">Create an account</a>
       </div>
 
     </div>
-
   </div>
 </section>
 {% endblock %}

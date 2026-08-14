@@ -2,52 +2,203 @@
 
 {% block title %}Staff & Roles Management — CnC{% endblock %}
 
+{% block extra_css %}
+<style>
+  .staff-header-card {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 18px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  @media (min-width: 600px) {
+    .staff-header-card {
+      padding: 24px;
+    }
+  }
+
+  .staff-container-card {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 16px;
+  }
+  @media (min-width: 768px) {
+    .staff-container-card {
+      padding: 24px;
+    }
+  }
+
+  /* Desktop Table View */
+  .staff-table-wrapper {
+    display: none;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  @media (min-width: 768px) {
+    .staff-table-wrapper {
+      display: block;
+    }
+  }
+
+  /* Mobile Responsive Cards View */
+  .staff-mobile-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  @media (min-width: 768px) {
+    .staff-mobile-cards {
+      display: none;
+    }
+  }
+
+  .staff-card-item {
+    background: var(--mist);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .role-select {
+    padding: 8px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-size: 16px; /* Prevents auto-zoom on mobile */
+    font-weight: 600;
+    color: var(--charcoal);
+    background: var(--white);
+    outline: none;
+    width: 100%;
+  }
+  @media (min-width: 768px) {
+    .role-select {
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      width: auto;
+    }
+  }
+  .role-select:focus {
+    border-color: var(--leaf);
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<section class="section">
+<section class="section" style="padding: 24px 0 60px; min-height: 75vh;">
   <div class="wrap">
     
-    <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+    <!-- Top Header -->
+    <div class="staff-header-card">
       <div>
-        <span class="mono" style="font-size: 11px; color: var(--turmeric-dark); font-weight: 600; text-transform: uppercase;">Access Control</span>
-        <h1 class="display" style="font-size: 26px; color: var(--charcoal); margin-top: 2px;">Staff Directory & Roles</h1>
+        <span class="mono" style="font-size: 11px; color: var(--turmeric-dark); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;">Access Control</span>
+        <h1 class="display" style="font-size: 22px; color: var(--charcoal); margin-top: 2px; margin-bottom: 0;">Staff Directory &amp; Roles</h1>
       </div>
-      <a href="{% url 'dashboard' %}" class="btn btn-secondary" style="font-size: 13px;">← Back to Dashboard</a>
+      <a href="{% url 'dashboard' %}" class="btn btn-secondary" style="font-size: 12px; padding: 7px 14px; min-height: 36px;">
+        ← Back to Dashboard
+      </a>
     </div>
 
-    <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px; overflow-x: auto;">
-      <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
-        <thead>
-          <tr style="border-bottom: 2px solid var(--line); color: var(--charcoal-soft); text-transform: uppercase; font-size: 11px;" class="mono">
-            <th style="padding: 12px;">User</th>
-            <th style="padding: 12px;">Phone</th>
-            <th style="padding: 12px;">Role Assignment</th>
-            <th style="padding: 12px; text-align: right;">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for staff in staff_users %}
-          <tr style="border-bottom: 1px solid var(--line);">
-            <td style="padding: 14px; font-weight: 600;">{{ staff.username }} <br><span style="font-size: 11px; color: var(--charcoal-soft); font-weight: normal;">{{ staff.email }}</span></td>
-            <td style="padding: 14px;" class="mono">{{ staff.phone|default:"—" }}</td>
-            <form method="post">
+    <!-- Main Container -->
+    <div class="staff-container-card">
+      
+      <!-- 1. DESKTOP VIEW: Data Table -->
+      <div class="staff-table-wrapper">
+        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
+          <thead>
+            <tr style="border-bottom: 2px solid var(--line); color: var(--charcoal-soft); text-transform: uppercase; font-size: 11px;" class="mono">
+              <th style="padding: 12px 10px;">User</th>
+              <th style="padding: 12px 10px;">Phone</th>
+              <th style="padding: 12px 10px;">Role Assignment</th>
+              <th style="padding: 12px 10px; text-align: right;">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for staff in staff_users %}
+            <tr style="border-bottom: 1px solid var(--line);">
+              <td style="padding: 14px 10px; font-weight: 600;">
+                {{ staff.username }} <br>
+                <span style="font-size: 11px; color: var(--charcoal-soft); font-weight: normal;">{{ staff.email|default:"No email recorded" }}</span>
+              </td>
+              <td style="padding: 14px 10px;" class="mono">{{ staff.phone|default:"—" }}</td>
+              
+              <td style="padding: 14px 10px;">
+                <form id="staff-form-{{ staff.id }}" method="post" style="margin: 0; display: inline-block;">
+                  {% csrf_token %}
+                  <input type="hidden" name="user_id" value="{{ staff.id }}">
+                  <select name="role" class="mono role-select">
+                    <option value="customer" {% if staff.role == 'customer' %}selected{% endif %}>CUSTOMER</option>
+                    <option value="employee" {% if staff.role == 'employee' %}selected{% endif %}>EMPLOYEE</option>
+                    <option value="manager" {% if staff.role == 'manager' %}selected{% endif %}>MANAGER</option>
+                    <option value="admin" {% if staff.role == 'admin' %}selected{% endif %}>ADMIN</option>
+                  </select>
+                </form>
+              </td>
+
+              <td style="padding: 14px 10px; text-align: right;">
+                <button type="submit" form="staff-form-{{ staff.id }}" class="btn btn-primary" style="padding: 6px 14px; font-size: 12px; min-height: 32px;">
+                  Update Role
+                </button>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="4" style="padding: 24px; text-align: center; color: var(--charcoal-soft);">No staff members found.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 2. MOBILE VIEW: Responsive Staff Cards -->
+      <div class="staff-mobile-cards">
+        {% for staff in staff_users %}
+          <div class="staff-card-item">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;">
+              <div>
+                <strong style="color: var(--charcoal); font-size: 14px;">{{ staff.username }}</strong>
+                <div style="font-size: 11px; color: var(--charcoal-soft);">{{ staff.email|default:"No email recorded" }}</div>
+              </div>
+              <span class="mono" style="font-size: 11px; color: var(--leaf); background: var(--white); border: 1px solid var(--line); padding: 2px 8px; border-radius: 6px;">
+                📱 {{ staff.phone|default:"—" }}
+              </span>
+            </div>
+
+            <form method="post" style="display: flex; flex-direction: column; gap: 8px; margin-top: 4px;">
               {% csrf_token %}
               <input type="hidden" name="user_id" value="{{ staff.id }}">
-              <td style="padding: 14px;">
-                <select name="role" style="padding: 6px 10px; border: 1px solid var(--line); border-radius: 6px; font-weight: 600;" class="mono">
+              
+              <div>
+                <label style="font-size: 10px; font-weight: 600; text-transform: uppercase; color: var(--charcoal-soft); display: block; margin-bottom: 4px;" class="mono">Assigned Role</label>
+                <select name="role" class="mono role-select">
                   <option value="customer" {% if staff.role == 'customer' %}selected{% endif %}>CUSTOMER</option>
                   <option value="employee" {% if staff.role == 'employee' %}selected{% endif %}>EMPLOYEE</option>
                   <option value="manager" {% if staff.role == 'manager' %}selected{% endif %}>MANAGER</option>
                   <option value="admin" {% if staff.role == 'admin' %}selected{% endif %}>ADMIN</option>
                 </select>
-              </td>
-              <td style="padding: 14px; text-align: right;">
-                <button type="submit" class="btn btn-primary" style="padding: 6px 12px; font-size: 12px;">Update Role</button>
-              </td>
+              </div>
+
+              <button type="submit" class="btn btn-primary" style="padding: 10px; font-size: 13px; justify-content: center; min-height: 42px; margin-top: 2px;">
+                Update Role
+              </button>
             </form>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+          </div>
+        {% empty %}
+          <div style="padding: 24px; text-align: center; color: var(--charcoal-soft); font-size: 13px;">
+            No staff members found.
+          </div>
+        {% endfor %}
+      </div>
+
     </div>
 
   </div>

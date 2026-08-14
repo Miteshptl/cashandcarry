@@ -2,65 +2,148 @@
 
 {% block title %}Bulk Import Products — CnC Express{% endblock %}
 
+{% block extra_css %}
+<style>
+  .import-card-wrapper {
+    max-width: 640px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .import-card {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 20px 16px;
+  }
+  @media (min-width: 600px) {
+    .import-card {
+      padding: 32px;
+    }
+  }
+
+  .import-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  @media (max-width: 520px) {
+    .import-header-row .btn {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+
+  .import-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-size: 16px; /* Prevents mobile auto-zoom */
+    outline: none;
+    background: var(--white);
+    color: var(--charcoal);
+    transition: border-color 0.2s ease;
+  }
+  @media (min-width: 600px) {
+    .import-input {
+      font-size: 13px;
+    }
+  }
+  .import-input:focus {
+    border-color: var(--leaf);
+  }
+
+  .import-file-box {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px dashed var(--leaf);
+    background: var(--mist);
+    border-radius: 8px;
+    font-size: 13px;
+    outline: none;
+    cursor: pointer;
+    color: var(--charcoal);
+  }
+
+  .job-item-card {
+    padding: 10px 14px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--mist);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<section class="section">
-  <div class="wrap">
+<section class="section" style="padding: 24px 0 60px; min-height: 75vh;">
+  <div class="wrap import-card-wrapper">
     
-    <div style="max-width: 640px; margin: 0 auto; background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 32px;">
+    <div class="import-card">
       
       <!-- Top Header & Sample File Button -->
-      <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 16px; flex-wrap: wrap;">
+      <div class="import-header-row">
         <div>
-          <span class="mono" style="font-size: 11px; color: var(--turmeric-dark); font-weight: 600; text-transform: uppercase;">Catalog Automation</span>
-          <h1 class="display" style="font-size: 24px; color: var(--charcoal); margin-top: 2px; margin-bottom: 4px;">Bulk Product Import</h1>
+          <span class="mono" style="font-size: 11px; color: var(--turmeric-dark); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;">Catalog Automation</span>
+          <h1 class="display" style="font-size: 22px; color: var(--charcoal); margin-top: 2px; margin-bottom: 4px;">Bulk Product Import</h1>
         </div>
         
-        <!-- Sample Excel Template Download Button -->
-        <a href="{% url 'download_sample_import' %}" class="btn btn-secondary" style="font-size: 12px; padding: 8px 12px; display: inline-flex; align-items: center; gap: 6px;">
+        <!-- Sample Template Download Button -->
+        <a href="{% url 'download_sample_import' %}" class="btn btn-secondary" style="font-size: 12px; padding: 7px 12px; min-height: 36px; display: inline-flex; align-items: center; gap: 6px;">
           📥 Download Sample Template
         </a>
       </div>
 
-      <p style="font-size: 13px; color: var(--charcoal-soft); margin-bottom: 24px;">
+      <p style="font-size: 13px; color: var(--charcoal-soft); margin-bottom: 20px; line-height: 1.5;">
         Upload a CSV or Excel spreadsheet from your local storage, or provide a public URL to batch import catalog items, prices, and stock counts.
       </p>
 
-      <!-- Import Form (enctype="multipart/form-data" required for local file uploads) -->
-      <form method="post" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 20px;">
+      <!-- Import Form -->
+      <form method="post" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 18px;">
         {% csrf_token %}
         
         <!-- Local File Upload Field -->
         <div>
-          <label style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--charcoal-soft); display: block; margin-bottom: 6px;">
-            Upload Local File (.csv, .xlsx, .xls)
+          <label style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--charcoal-soft); display: block; margin-bottom: 6px;">
+            Upload Local File (.csv, .xlsx, .xls) *
           </label>
-          <input type="file" name="file" accept=".csv, .xlsx, .xls" style="width: 100%; padding: 10px 14px; border: 1px dashed var(--leaf); background: var(--mist); border-radius: 8px; font-size: 13px; outline: none; cursor: pointer;">
+          <input type="file" name="file" accept=".csv, .xlsx, .xls" class="import-file-box">
         </div>
 
-        <div style="text-align: center; font-size: 12px; color: var(--charcoal-soft); font-weight: 600;">— OR —</div>
+        <div style="text-align: center; font-size: 11px; color: var(--charcoal-soft); font-weight: 700;" class="mono">— OR —</div>
 
-        <!-- CSV File URL Input Field -->
+        <!-- Remote File URL Field -->
         <div>
-          <label style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--charcoal-soft); display: block; margin-bottom: 6px;">
+          <label style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--charcoal-soft); display: block; margin-bottom: 6px;">
             Remote File URL
           </label>
-          <input type="url" name="file_url" placeholder="https://storage.googleapis.com/catalog.csv" style="width: 100%; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; font-size: 13px; outline: none;">
+          <input type="url" name="file_url" placeholder="https://storage.googleapis.com/catalog.csv" class="import-input">
         </div>
 
-        <button type="submit" class="btn btn-primary" style="justify-content: center; padding: 12px; font-weight: 600;">🚀 Start Import Job</button>
+        <button type="submit" class="btn btn-primary" style="justify-content: center; padding: 12px; font-weight: 600; min-height: 44px; font-size: 14px; margin-top: 4px;">
+          🚀 Start Import Job
+        </button>
       </form>
 
       <!-- Recent Import Jobs -->
-      <div style="margin-top: 32px; border-top: 1px solid var(--line); padding-top: 20px;">
-        <h3 class="display" style="font-size: 16px; margin-bottom: 12px;">Recent Import Jobs</h3>
+      <div style="margin-top: 28px; border-top: 1px solid var(--line); padding-top: 18px;">
+        <h3 class="display" style="font-size: 16px; margin-bottom: 12px; color: var(--charcoal);">Recent Import Jobs</h3>
         <div style="display: flex; flex-direction: column; gap: 8px; font-size: 12px;">
           {% for job in import_jobs %}
-          <div style="padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; background: var(--mist); display: flex; justify-content: space-between; align-items: center;" class="mono">
-            <span>Job #{{ job.id }} — <strong>{{ job.status|upper }}</strong></span>
-            <span style="color: var(--charcoal-soft);">Success: {{ job.success_count }} | Errors: {{ job.error_count }}</span>
+          <div class="job-item-card mono">
+            <span style="color: var(--charcoal);">Job #{{ job.id }} — <strong style="color: var(--leaf);">{{ job.status|upper }}</strong></span>
+            <span style="color: var(--charcoal-soft); font-size: 11px;">Success: {{ job.success_count }} | Errors: {{ job.error_count }}</span>
           </div>
           {% empty %}
-          <p style="color: var(--charcoal-soft); font-size: 12px;">No past import jobs.</p>
+          <p style="color: var(--charcoal-soft); font-size: 12px; margin: 0;">No past import jobs.</p>
           {% endfor %}
         </div>
       </div>

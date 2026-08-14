@@ -2,42 +2,127 @@
 
 {% block title %}Live Orders — CnC Operations{% endblock %}
 
+{% block extra_css %}
+<style>
+  .live-header-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .live-order-card {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 16px;
+  }
+  @media (min-width: 600px) {
+    .live-order-card {
+      padding: 20px;
+    }
+  }
+
+  .live-order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .status-form-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+  }
+  @media (min-width: 680px) {
+    .status-form-wrapper {
+      width: auto;
+    }
+  }
+
+  .status-select {
+    padding: 8px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-size: 16px; /* Prevents auto-zoom on mobile */
+    font-weight: 600;
+    color: var(--charcoal);
+    background: var(--white);
+    outline: none;
+    flex: 1;
+  }
+  @media (min-width: 680px) {
+    .status-select {
+      font-size: 13px;
+      padding: 6px 12px;
+      flex: initial;
+    }
+  }
+  .status-select:focus {
+    border-color: var(--leaf);
+  }
+
+  .status-submit-btn {
+    padding: 8px 16px;
+    font-size: 13px;
+    min-height: 40px;
+  }
+  @media (min-width: 680px) {
+    .status-submit-btn {
+      padding: 6px 14px;
+      font-size: 12px;
+      min-height: 34px;
+    }
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<section class="section" style="padding: 32px 0; min-height: 80vh;">
+<section class="section" style="padding: 24px 0 60px; min-height: 80vh;">
   <div class="wrap">
     
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <!-- Top Header -->
+    <div class="live-header-bar">
       <div>
-        <h1 class="display" style="font-size: 26px; font-weight: 700; margin: 0 0 4px 0;">⚡ Live Order Queue</h1>
-        <p style="color: var(--charcoal-soft); font-size: 13px; margin: 0;">Review incoming orders and update delivery status.</p>
+        <h1 class="display" style="font-size: 24px; font-weight: 700; margin: 0 0 4px 0;">⚡ Live Order Queue</h1>
+        <p style="color: var(--charcoal-soft); font-size: 13px; margin: 0;">Review incoming orders and update delivery status in real-time.</p>
       </div>
-      <a href="{% url 'dashboard' %}" class="btn btn-secondary" style="font-size: 13px; padding: 8px 16px;">
+      <a href="{% url 'dashboard' %}" class="btn btn-secondary" style="font-size: 12px; padding: 7px 14px; min-height: 36px;">
         ← Back to Dashboard
       </a>
     </div>
 
     {% if orders %}
-      <div style="display: flex; flex-direction: column; gap: 16px;">
+      <div style="display: flex; flex-direction: column; gap: 14px;">
         {% for order in orders %}
-          <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 20px;">
+          <div class="live-order-card">
             
-            <!-- Order Header -->
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--line);">
-              <div>
-                <div style="display: flex; align-items: center; gap: 10px;">
-                  <strong class="mono" style="font-size: 16px; color: var(--charcoal);">Order #{{ order.id }}</strong>
+            <!-- Order Header & Quick Status Action -->
+            <div class="live-order-header">
+              <div style="flex: 1; min-width: 240px;">
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                  <strong class="mono" style="font-size: 15px; color: var(--charcoal);">Order #{{ order.id }}</strong>
                   <span style="font-size: 12px; color: var(--charcoal-soft);">{{ order.created_at|date:"M d · h:i A" }}</span>
                 </div>
-                <div style="font-size: 13px; color: var(--charcoal-soft); margin-top: 2px;">
-                  Customer: <strong>{{ order.user.username }}</strong> ({{ order.user.phone|default:"No phone" }}) · Deliver to: {{ order.address.line1 }} (PIN: {{ order.address.pincode }})
+                <div style="font-size: 13px; color: var(--charcoal-soft); margin-top: 4px; line-height: 1.4;">
+                  Customer: <strong style="color: var(--charcoal);">{{ order.user.username }}</strong> ({{ order.user.phone|default:"No phone" }})<br>
+                  Deliver to: {{ order.address.line1 }} <span class="mono" style="color: var(--leaf); font-size: 11px;">(PIN: {{ order.address.pincode }})</span>
                 </div>
               </div>
 
               <!-- Quick Status Update Form -->
-              <form method="POST" action="{% url 'live_orders' %}" style="display: flex; align-items: center; gap: 8px;">
+              <form method="POST" action="{% url 'live_orders' %}" class="status-form-wrapper">
                 {% csrf_token %}
                 <input type="hidden" name="order_id" value="{{ order.id }}">
-                <select name="order_status" style="padding: 6px 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 13px; font-weight: 600;">
+                <select name="order_status" class="status-select">
                   <option value="pending_acceptance" {% if order.order_status == 'pending_acceptance' %}selected{% endif %}>Pending</option>
                   <option value="accepted" {% if order.order_status == 'accepted' %}selected{% endif %}>Accepted</option>
                   <option value="packing" {% if order.order_status == 'packing' %}selected{% endif %}>Packing</option>
@@ -45,31 +130,31 @@
                   <option value="delivered" {% if order.order_status == 'delivered' %}selected{% endif %}>Delivered</option>
                   <option value="rejected" {% if order.order_status == 'rejected' %}selected{% endif %}>Rejected</option>
                 </select>
-                <button type="submit" class="btn btn-primary" style="padding: 6px 14px; font-size: 12px;">Update</button>
+                <button type="submit" class="btn btn-primary status-submit-btn">Update</button>
               </form>
             </div>
 
             <!-- Items Ordered -->
             <div style="display: flex; flex-direction: column; gap: 6px; font-size: 13px;">
               {% for item in order.items.all %}
-                <div style="display: flex; justify-content: space-between;">
-                  <span>{{ item.product.name }} × <strong>{{ item.quantity }}</strong></span>
-                  <span class="mono" style="color: var(--charcoal-soft);">₹{{ item.total_price }}</span>
+                <div style="display: flex; justify-content: space-between; gap: 8px;">
+                  <span style="color: var(--charcoal);">{{ item.product.name }} × <strong>{{ item.quantity }}</strong></span>
+                  <span class="mono" style="color: var(--charcoal-soft); flex-shrink: 0;">₹{{ item.total_price }}</span>
                 </div>
               {% endfor %}
             </div>
 
             <!-- Order Total Footer -->
-            <div style="display: flex; justify-content: space-between; margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--line); font-size: 13px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--line); font-size: 13px; flex-wrap: wrap; gap: 8px;">
               <span>Payment Mode: <strong>{{ order.payment_method }}</strong></span>
-              <span>Total: <strong class="mono" style="color: var(--leaf); font-size: 15px;">₹{{ order.total_amount }}</strong></span>
+              <span>Total: <strong class="mono" style="color: var(--leaf); font-size: 16px;">₹{{ order.total_amount }}</strong></span>
             </div>
 
           </div>
         {% endfor %}
       </div>
     {% else %}
-      <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 48px; text-align: center;">
+      <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 40px 16px; text-align: center;">
         <p style="color: var(--charcoal-soft); margin: 0; font-size: 14px;">No active orders in the queue.</p>
       </div>
     {% endif %}
