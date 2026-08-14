@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Refunds — CnC Operations{% endblock %}
+
+{% block content %}
+<section class="section" style="padding: 32px 0; min-height: 80vh;">
+  <div class="wrap">
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+      <div>
+        <h1 class="display" style="font-size: 26px; font-weight: 700; margin: 0 0 4px 0;">Customer Refund &amp; Return Claims</h1>
+        <p style="color: var(--charcoal-soft); font-size: 13px; margin: 0;">Inspect proof of damage/missing items and process refunds.</p>
+      </div>
+      <a href="{% url 'dashboard' %}" class="btn btn-secondary" style="font-size: 13px; padding: 8px 16px;">
+        ← Back to Dashboard
+      </a>
+    </div>
+
+    {% if refund_tickets %}
+      <div style="display: flex; flex-direction: column; gap: 16px;">
+        {% for ticket in refund_tickets %}
+          <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 20px;">
+            
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; margin-bottom: 14px;">
+              <div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <strong class="mono" style="font-size: 15px;">Ticket #{{ ticket.id }}</strong>
+                  <span style="font-size: 13px; color: var(--charcoal-soft);">for Order #{{ ticket.order.id }}</span>
+                  <span class="mono" style="font-weight: 700; color: var(--leaf); margin-left: 6px;">₹{{ ticket.amount_requested }}</span>
+                </div>
+                <div style="font-size: 13px; color: var(--charcoal-soft); margin-top: 4px;">
+                  Customer: <strong>{{ ticket.user.username }}</strong> ({{ ticket.user.phone|default:"No Phone" }}) · {{ ticket.created_at|date:"M d, Y · h:i A" }}
+                </div>
+              </div>
+
+              <!-- Quick Status Action Form -->
+              <form method="POST" action="{% url 'manage_refunds' %}" style="display: flex; align-items: center; gap: 8px;">
+                {% csrf_token %}
+                <input type="hidden" name="refund_id" value="{{ ticket.id }}">
+                <select name="status" style="padding: 6px 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 13px; font-weight: 600;">
+                  <option value="pending" {% if ticket.status == 'pending' %}selected{% endif %}>Pending</option>
+                  <option value="approved" {% if ticket.status == 'approved' %}selected{% endif %}>Approved</option>
+                  <option value="processed" {% if ticket.status == 'processed' %}selected{% endif %}>Processed</option>
+                  <option value="rejected" {% if ticket.status == 'rejected' %}selected{% endif %}>Rejected</option>
+                </select>
+                <button type="submit" class="btn btn-primary" style="padding: 6px 14px; font-size: 12px;">Save</button>
+              </form>
+            </div>
+
+            <!-- Ticket Reason, Description, and Attached Media -->
+            <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px; background: var(--mist); padding: 14px 18px; border-radius: 12px; font-size: 13px; border: 1px solid var(--line); align-items: center;">
+              <div>
+                <div style="margin-bottom: 4px;"><strong>Reason:</strong> {{ ticket.get_reason_display }}</div>
+                <div style="color: var(--charcoal-soft);"><strong>Customer Note:</strong> {{ ticket.description }}</div>
+              </div>
+
+              <!-- Media Preview Box -->
+              <div style="text-align: right;">
+                {% if ticket.proof_file %}
+                  <a href="{{ ticket.proof_file.url }}" target="_blank" class="btn btn-secondary" style="font-size: 12px; padding: 6px 12px;">
+                    👁️ View Photo / Video Proof
+                  </a>
+                {% else %}
+                  <span style="color: var(--charcoal-soft); font-size: 12px;">No file attached</span>
+                {% endif %}
+              </div>
+            </div>
+
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 48px; text-align: center;">
+        <p style="color: var(--charcoal-soft); margin: 0; font-size: 14px;">No customer refund requests found.</p>
+      </div>
+    {% endif %}
+
+  </div>
+</section>
+{% endblock %}

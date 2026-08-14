@@ -1,138 +1,184 @@
 {% extends 'base.html' %}
 
-{% block title %}My Account — CnC{% endblock %}
+{% block title %}My Account &amp; Past Orders — CnC Supermarket{% endblock %}
 
 {% block content %}
-<section class="section">
+<section class="section" style="padding: 44px 0; min-height: 75vh;">
   <div class="wrap">
     
-    <!-- Dashboard Header -->
-    <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px; margin-bottom: 28px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
-      <div style="display: flex; align-items: center; gap: 16px;">
-        <!-- Avatar Circle -->
-        <div style="width: 64px; height: 64px; border-radius: 50%; background: var(--leaf); color: var(--white); display: flex; align-items: center; justify-content: center; font-family: 'Fraunces', serif; font-size: 26px; font-weight: 700;">
-          {{ user.username|slice:":1"|upper }}
-        </div>
-        <div>
-          <h1 class="display" style="font-size: 24px; color: var(--charcoal);">{{ user.get_full_name|default:user.username }}</h1>
-          <div class="mono" style="font-size: 12px; color: var(--charcoal-soft); margin-top: 2px;">
-            ROLE: <span style="color: var(--leaf); font-weight: 600; text-transform: uppercase;">{{ user.role }}</span> · {{ user.email|default:"No email set" }}
-          </div>
-        </div>
+    <!-- Account Header with Quick Sign Out -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; flex-wrap: wrap; gap: 14px;">
+      <div>
+        <h1 class="display" style="font-size: 28px; font-weight: 700; color: var(--charcoal); margin-bottom: 4px;">My Account</h1>
+        <p style="color: var(--charcoal-soft); font-size: 14px; margin: 0;">Manage your contact details, saved addresses, and track past grocery orders.</p>
       </div>
-    <form method="post" action="{% url 'logout' %}" style="margin: 0;">
-    {% csrf_token %}
-    <button 
-        type="submit" 
-        class="btn btn-secondary" 
-        style="border-color: var(--chili); color: var(--chili); padding: 10px 18px; font-size: 13px; font-weight: 600; background: transparent; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;"
-    >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-        Log Out
-    </button>
-    </form>
 
-    <!-- 3-Column Profile Dashboard Grid -->
-    <div style="display: grid; grid-template-columns: 1fr 1.2fr 0.8fr; gap: 24px; align-items: start;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span class="mono" style="font-size: 12px; background: rgba(47, 107, 79, 0.1); color: var(--leaf); padding: 6px 14px; border-radius: 20px; font-weight: 600;">
+          📱 {{ user.phone|default:user.username }}
+        </span>
+        <a href="{% url 'logout' %}" class="btn btn-secondary" style="font-size: 12px; padding: 6px 14px; border-color: var(--chili); color: var(--chili);">
+          🚪 Sign Out
+        </a>
+      </div>
+    </div>
+
+    <!-- Main 2-Column Layout -->
+    <div style="display: grid; grid-template-columns: 1fr 1.8fr; gap: 32px; align-items: start;">
       
-      <!-- Column 1: Personal Details -->
-      <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px;">
-        <h2 class="display" style="font-size: 18px; color: var(--leaf); margin-bottom: 16px;">Profile Details</h2>
-        
-        <form method="post" action="#" style="display: flex; flex-direction: column; gap: 14px;">
-          {% csrf_token %}
-          <div>
-            <label style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--charcoal-soft); display: block; margin-bottom: 4px;">Username</label>
-            <input type="text" value="{{ user.username }}" disabled style="width: 100%; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--mist); color: var(--charcoal-soft); font-family: 'Inter';">
-          </div>
+      <!-- LEFT COLUMN: Profile Info & Addresses -->
+      <div style="display: flex; flex-direction: column; gap: 24px;">
 
-          <div>
-            <label style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--charcoal-soft); display: block; margin-bottom: 4px;">Phone Number</label>
-            <input type="text" name="phone" value="{{ user.phone|default:'' }}" placeholder="Add phone number" style="width: 100%; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; outline: none; font-family: 'Inter';">
-          </div>
+        <!-- 1. Contact Information Card -->
+        <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px;">
+          <h2 style="font-size: 16px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+            <span>👤</span> Personal Details
+          </h2>
 
-          <div>
-            <label style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--charcoal-soft); display: block; margin-bottom: 4px;">Email Address</label>
-            <input type="email" name="email" value="{{ user.email|default:'' }}" placeholder="Add email address" style="width: 100%; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; outline: none; font-family: 'Inter';">
-          </div>
+          <form method="POST" action="{% url 'profile' %}">
+            {% csrf_token %}
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              <div>
+                <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: var(--charcoal);">
+                  Phone Number <span style="color: var(--chili);">*</span>
+                </label>
+                <input 
+                  type="tel" 
+                  name="phone" 
+                  value="{{ user.phone|default:'' }}" 
+                  required 
+                  pattern="[6-9][0-9]{9}" 
+                  maxlength="10" 
+                  placeholder="10-digit mobile" 
+                  oninput="this.value = this.value.replace(/[^0-9]/g, '')"
+                  style="width: 100%; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 13px; outline: none;"
+                >
+                <small style="font-size: 11px; color: var(--charcoal-soft); display: block; margin-top: 3px;">10-digit number starting with 6, 7, 8, or 9</small>
+              </div>
 
-          <button type="submit" class="btn btn-primary" style="justify-content: center; padding: 10px; margin-top: 6px;">
-            Save Profile
-          </button>
-        </form>
-      </div>
+              <div>
+                <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px; color: var(--charcoal);">Email Address</label>
+                <input 
+                  type="email" 
+                  name="email" 
+                  value="{{ user.email|default:'' }}" 
+                  placeholder="your.email@example.com" 
+                  style="width: 100%; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 13px; outline: none;"
+                >
+              </div>
 
-      <!-- Column 2: Saved Delivery Addresses -->
-      <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-          <h2 class="display" style="font-size: 18px; color: var(--leaf);">Delivery Addresses</h2>
-          <span class="mono" style="font-size: 11px; color: var(--turmeric-dark); font-weight: 600;">{{ addresses|length|default:0 }} SAVED</span>
-        </div>
-
-        <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
-          {% for addr in addresses %}
-          <div style="border: 1px solid var(--line); border-radius: 10px; padding: 14px; background: {% if addr.is_default %}var(--mist){% else %}var(--white){% endif %}; position: relative;">
-            {% if addr.is_default %}
-              <span class="mono" style="font-size: 10px; background: var(--leaf); color: var(--white); padding: 2px 6px; border-radius: 4px; float: right;">DEFAULT</span>
-            {% endif %}
-            <div style="font-weight: 600; font-size: 14px; color: var(--charcoal);">{{ addr.line1 }}</div>
-            {% if addr.line2 %}<div style="font-size: 13px; color: var(--charcoal-soft);">{{ addr.line2 }}</div>{% endif %}
-            <div style="font-size: 12px; color: var(--charcoal-soft); margin-top: 4px;">
-              {% if addr.landmark %}Landmark: {{ addr.landmark }} · {% endif %}Pincode: <strong>{{ addr.pincode }}</strong>
+              <button type="submit" class="btn btn-secondary" style="padding: 8px 16px; font-size: 12px; margin-top: 4px; justify-content: center;">
+                Save Changes
+              </button>
             </div>
-          </div>
-          {% empty %}
-          <p style="font-size: 13px; color: var(--charcoal-soft);">No saved addresses yet.</p>
-          {% endfor %}
+          </form>
         </div>
 
-        <!-- Add Address Form Toggle/Inputs -->
-        <form method="post" action="#" style="border-top: 1px dashed var(--line); padding-top: 16px; display: flex; flex-direction: column; gap: 10px;">
-          {% csrf_token %}
-          <span style="font-size: 12px; font-weight: 600; color: var(--charcoal);">+ Add New Address</span>
-          <input type="text" name="line1" required placeholder="Flat / House / Building / Street (Line 1)" style="width: 100%; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 13px; outline: none;">
-          
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-            <input type="text" name="landmark" placeholder="Landmark (Optional)" style="width: 100%; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 13px; outline: none;">
-            <input type="text" name="pincode" required placeholder="Pincode (e.g. 400001)" style="width: 100%; padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 13px; outline: none;">
-          </div>
+        <!-- 2. Saved Addresses Card -->
+        <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px;">
+          <h2 style="font-size: 16px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+            <span>📍</span> Saved Addresses
+          </h2>
 
-          <button type="submit" class="btn btn-secondary" style="border-color: var(--leaf); color: var(--leaf); justify-content: center; padding: 8px;">
-            Add Address
-          </button>
-        </form>
+          {% if addresses %}
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px;">
+              {% for addr in addresses %}
+                <div style="background: var(--mist); border: 1px solid var(--line); padding: 12px; border-radius: 10px; font-size: 13px;">
+                  <strong style="color: var(--charcoal);">{{ addr.line1 }}</strong>
+                  {% if addr.landmark %}<div style="color: var(--charcoal-soft); font-size: 12px;">Landmark: {{ addr.landmark }}</div>{% endif %}
+                  <div class="mono" style="color: var(--leaf); font-size: 11px; margin-top: 2px;">PIN: {{ addr.pincode }}</div>
+                </div>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p style="font-size: 13px; color: var(--charcoal-soft); margin-bottom: 12px;">No addresses saved yet.</p>
+          {% endif %}
+
+          <!-- Inline Add Address Accordion -->
+          <details style="font-size: 13px;">
+            <summary style="cursor: pointer; font-weight: 600; color: var(--leaf); margin-bottom: 10px;">+ Add New Address</summary>
+            <form method="POST" action="{% url 'profile' %}" style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
+              {% csrf_token %}
+              <input type="text" name="line1" required placeholder="Flat / Building / Street *" style="padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 13px; outline: none;">
+              <input type="text" name="landmark" placeholder="Landmark (Optional)" style="padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 13px; outline: none;">
+              <input type="text" name="pincode" required placeholder="Pincode *" style="padding: 8px 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 13px; outline: none;">
+              <button type="submit" class="btn btn-primary" style="padding: 8px 16px; font-size: 12px; justify-content: center;">Save Address</button>
+            </form>
+          </details>
+        </div>
+
+        <!-- 3. Returns & Refunds Ticket Link -->
+        <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 20px;">
+          <h3 style="font-size: 14px; font-weight: 700; margin-bottom: 4px;">Need to return an item?</h3>
+          <p style="font-size: 12px; color: var(--charcoal-soft); margin-bottom: 12px;">Upload photo or video verification for damaged or missing items.</p>
+          <a href="{% url 'refund' %}" class="btn btn-secondary" style="font-size: 12px; padding: 7px 14px; width: 100%; justify-content: center;">
+            🔄 Request Return / Refund
+          </a>
+        </div>
+
       </div>
 
-      <!-- Column 3: CnC Wallet & Quick Links -->
-      <div style="display: flex; flex-direction: column; gap: 16px;">
-        
-        <!-- Wallet Card -->
-        <div class="mode-card" style="background: linear-gradient(135deg, var(--leaf) 0%, var(--leaf-dark) 100%); color: var(--white);">
-          <div class="mode-card-title" style="color: var(--turmeric);">CnC Pay Balance</div>
-          <div class="mono" style="font-size: 32px; font-weight: 600; margin: 8px 0;">₹0.00</div>
-          <p style="font-size: 12px; color: #DCE9DF; margin-bottom: 16px;">
-            Use CnC credits for 1-click checkout on instant deliveries.
-          </p>
-          <button class="btn btn-primary" style="width: 100%; justify-content: center; padding: 10px;">
-            + Add Money via Razorpay
-          </button>
-        </div>
+      <!-- RIGHT COLUMN: Past Orders History -->
+      <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px;">
+        <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
+          <span>📦</span> Past Orders ({{ orders|length }})
+        </h2>
 
-        <!-- Quick Links Card -->
-        <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 20px;">
-          <h3 style="font-size: 14px; font-weight: 600; color: var(--charcoal); margin-bottom: 12px;">Account Actions</h3>
-          <ul style="list-style: none; display: flex; flex-direction: column; gap: 10px; font-size: 13px;">
-            <li style="border-bottom: 1px solid var(--line); padding-bottom: 8px;">
-              <a href="#" style="color: var(--leaf); font-weight: 600;">📦 My Orders & Tracking</a>
-            </li>
-            <li style="border-bottom: 1px solid var(--line); padding-bottom: 8px;">
-              <a href="{% url 'refund' %}" style="color: var(--charcoal-soft);">🔄 Request Order Refund</a>
-            </li>
-            <li>
-              <a href="{% url 'contact' %}" style="color: var(--charcoal-soft);">💬 Contact Support</a>
-            </li>
-          </ul>
-        </div>
+        {% if orders %}
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            {% for order in orders %}
+              <div style="border: 1px solid var(--line); border-radius: 14px; padding: 18px; background: var(--white);">
+                
+                <!-- Order Card Header -->
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; padding-bottom: 12px; border-bottom: 1px solid var(--line);">
+                  <div>
+                    <span class="mono" style="font-weight: 700; font-size: 15px; color: var(--charcoal);">Order #{{ order.id }}</span>
+                    <span style="font-size: 12px; color: var(--charcoal-soft); margin-left: 8px;">{{ order.created_at|date:"M d, Y · h:i A" }}</span>
+                  </div>
+                  
+                  <span style="font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; text-transform: uppercase;
+                    {% if order.order_status == 'delivered' %}background: rgba(47, 107, 79, 0.15); color: var(--leaf);
+                    {% elif order.order_status == 'rejected' or order.order_status == 'cancelled' %}background: rgba(216, 73, 46, 0.12); color: var(--chili);
+                    {% else %}background: rgba(232, 163, 61, 0.15); color: var(--turmeric-dark);{% endif %}">
+                    {{ order.order_status|title }}
+                  </span>
+                </div>
+
+                <!-- Items Preview -->
+                <div style="padding: 12px 0; display: flex; flex-direction: column; gap: 6px;">
+                  {% for item in order.items.all %}
+                    <div style="display: flex; justify-content: space-between; font-size: 13px;">
+                      <span style="color: var(--charcoal);">{{ item.product.name }} <strong style="color: var(--charcoal-soft);">× {{ item.quantity }}</strong></span>
+                      <span class="mono" style="color: var(--charcoal-soft);">₹{{ item.total_price }}</span>
+                    </div>
+                  {% endfor %}
+                </div>
+
+                <!-- Order Card Footer -->
+                <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 12px; border-top: 1px dashed var(--line); flex-wrap: wrap; gap: 8px;">
+                  <div style="font-size: 13px;">
+                    <span style="color: var(--charcoal-soft);">Total: </span>
+                    <strong class="mono" style="color: var(--leaf); font-size: 15px;">₹{{ order.total_amount }}</strong>
+                    <span style="font-size: 11px; color: var(--charcoal-soft); margin-left: 6px;">({{ order.payment_method }})</span>
+                  </div>
+
+                  <a href="{% url 'order_detail' order.id %}" class="btn btn-secondary" style="padding: 6px 14px; font-size: 12px;">
+                    View Invoice →
+                  </a>
+                </div>
+
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <!-- Empty State -->
+          <div style="text-align: center; padding: 48px 16px;">
+            <div style="font-size: 40px; margin-bottom: 12px;">🛍️</div>
+            <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 6px;">No orders placed yet</h3>
+            <p style="font-size: 13px; color: var(--charcoal-soft); margin-bottom: 20px;">When you place orders, their live delivery and invoice status will appear right here.</p>
+            <a href="{% url 'home' %}" class="btn btn-primary" style="padding: 8px 18px; font-size: 13px;">Start Shopping</a>
+          </div>
+        {% endif %}
 
       </div>
 

@@ -1,42 +1,103 @@
 {% extends 'base.html' %}
 
-{% block title %}Your Cart — CnC{% endblock %}
+{% block title %}Your Cart — CnC Supermarket{% endblock %}
 
 {% block content %}
-<section class="section">
+<section class="section" style="min-height: 70vh; padding: 40px 0;">
   <div class="wrap">
-    <h1 class="display" style="font-size: 28px; margin-bottom: 24px;">Your Shopping Cart</h1>
-
-    <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 32px; align-items: start;">
-      
-      <!-- Cart List -->
-      <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px;">
-        <p style="color: var(--charcoal-soft); font-size: 14px;">Your cart is currently empty.</p>
-      </div>
-
-      <!-- Order Summary Card -->
-      <div class="mode-card">
-        <div class="mode-card-title">Order Summary</div>
-        
-        <div class="mode-detail">
-          <span class="label">Subtotal</span>
-          <span class="value mono">₹0.00</span>
-        </div>
-        <div class="mode-detail">
-          <span class="label">Delivery Fee</span>
-          <span class="value mono">₹29.00</span>
-        </div>
-        <div class="mode-detail" style="border-top: 1px solid var(--line); margin-top: 16px; padding-top: 16px;">
-          <span class="label" style="font-weight: 700; color: var(--charcoal);">Total Amount</span>
-          <span class="value mono" style="font-size: 18px; color: var(--leaf);">₹29.00</span>
-        </div>
-
-        <button class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 20px;">
-          Proceed to Checkout
-        </button>
-      </div>
-
+    
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
+      <h1 class="display" style="font-size: 28px; font-weight: 700; margin: 0;">Shopping Cart</h1>
+      {% if cart_items %}
+        <a href="{% url 'clear_cart' %}" class="btn btn-secondary" style="font-size: 12px; padding: 6px 12px; color: var(--chili); border-color: var(--chili);">
+          Clear Cart
+        </a>
+      {% endif %}
     </div>
+
+    {% if cart_items %}
+      <div style="display: grid; grid-template-columns: 1.6fr 1fr; gap: 32px; align-items: start;">
+        
+        <!-- Cart Items List -->
+        <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px;">
+          {% for item in cart_items %}
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-bottom: 16px; margin-bottom: 16px; {% if not forloop.last %}border-bottom: 1px solid var(--line);{% endif %}">
+              
+              <!-- Product Image & Details -->
+              <div style="display: flex; align-items: center; gap: 16px;">
+                <div style="width: 64px; height: 64px; background: var(--mist); border-radius: 10px; display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0;">
+                  {% if item.product.get_image %}
+                    <img src="{{ item.product.get_image }}" alt="{{ item.product.name }}" style="max-height: 100%; max-width: 100%; object-fit: contain;">
+                  {% else %}
+                    <span style="font-size: 24px;">🛒</span>
+                  {% endif %}
+                </div>
+                <div>
+                  <h3 style="font-size: 15px; font-weight: 600; color: var(--charcoal); margin: 0 0 4px 0;">
+                    <a href="{% url 'product_detail' item.product.id %}">{{ item.product.name }}</a>
+                  </h3>
+                  <div style="font-size: 13px; color: var(--charcoal-soft);">
+                    Qty: <strong>{{ item.quantity }}</strong> × ₹{{ item.unit_price }}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Item Subtotal Price -->
+              <div class="mono" style="font-size: 16px; font-weight: 700; color: var(--leaf); white-space: nowrap;">
+                ₹{{ item.total_price }}
+              </div>
+
+            </div>
+          {% endfor %}
+        </div>
+
+        <!-- Order Summary & Bill Box -->
+        <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px;">
+          <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 16px;">Bill Details</h2>
+          
+          <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; color: var(--charcoal-soft);">
+            <span>Item Subtotal</span>
+            <span class="mono" style="color: var(--charcoal); font-weight: 600;">₹{{ subtotal }}</span>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; margin-bottom: 16px; font-size: 14px; color: var(--charcoal-soft);">
+            <span>Delivery Partner Fee</span>
+            <span class="mono">
+              {% if delivery_fee == 0 %}
+                <span style="color: var(--leaf); font-weight: 700;">FREE</span>
+              {% else %}
+                <span style="color: var(--charcoal); font-weight: 600;">₹{{ delivery_fee }}</span>
+              {% endif %}
+            </span>
+          </div>
+
+          {% if subtotal < 100 %}
+            <div style="background: rgba(232, 163, 61, 0.12); border: 1px solid var(--turmeric); border-radius: 8px; padding: 8px 12px; font-size: 12px; color: var(--turmeric-dark); margin-bottom: 16px;">
+              Add items worth <strong>₹{{ 100|add:"-"|add:subtotal }}</strong> more for <strong>FREE delivery</strong>!
+            </div>
+          {% endif %}
+
+          <div style="display: flex; justify-content: space-between; padding-top: 14px; border-top: 1px solid var(--line); font-size: 17px; font-weight: 700;">
+            <span>To Pay</span>
+            <span class="mono" style="color: var(--leaf);">₹{{ grand_total }}</span>
+          </div>
+
+          <a href="{% url 'checkout' %}" class="btn btn-primary" style="display: flex; justify-content: center; width: 100%; margin-top: 24px; padding: 12px; font-size: 14px;">
+            Proceed to Checkout →
+          </a>
+        </div>
+
+      </div>
+    {% else %}
+      <!-- Empty Cart State -->
+      <div style="text-align: center; padding: 64px 20px; background: var(--white); border: 1px solid var(--line); border-radius: 16px; max-width: 540px; margin: 0 auto;">
+        <div style="font-size: 48px; margin-bottom: 16px;">🛒</div>
+        <h2 class="display" style="font-size: 22px; font-weight: 600; margin-bottom: 8px;">Your cart is empty</h2>
+        <p style="color: var(--charcoal-soft); font-size: 14px; margin-bottom: 24px;">Your basket is waiting for fresh daily essentials and groceries.</p>
+        <a href="{% url 'product_list' %}" class="btn btn-primary" style="padding: 10px 24px;">Browse Products</a>
+      </div>
+    {% endif %}
+
   </div>
 </section>
 {% endblock %}

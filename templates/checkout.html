@@ -1,66 +1,226 @@
 {% extends 'base.html' %}
 
+{% block title %}Checkout — CnC Supermarket{% endblock %}
+
 {% block content %}
-<div class="container py-4">
-  <h2 class="fw-bold mb-4">Checkout & Delivery</h2>
-  
-  <form method="POST" action="{% url 'checkout' %}">
-    {% csrf_token %}
-    <div class="row g-4">
-      <!-- Address Selection -->
-      <div class="col-md-7">
-        <div class="card shadow-sm border-0 p-3 mb-3">
-          <h5 class="fw-bold mb-3">Select Delivery Address</h5>
-          {% if addresses %}
-            {% for addr in addresses %}
-              <div class="form-check mb-2 p-2 border rounded">
-                <input class="form-check-input ms-1" type="radio" name="address_id" id="addr_{{ addr.id }}" value="{{ addr.id }}" {% if forloop.first %}checked{% endif %} required>
-                <label class="form-check-label ms-2" for="addr_{{ addr.id }}">
-                  <strong>{{ addr.full_name }}</strong> ({{ addr.phone }})<br>
-                  <small class="text-muted">{{ addr.street_address }}, {{ addr.city }}, {{ addr.pincode }}</small>
+<section class="section" style="padding: 40px 0;">
+  <div class="wrap">
+    
+    <h1 class="display" style="font-size: 28px; font-weight: 700; margin-bottom: 24px;">Checkout</h1>
+
+    <form method="POST" action="{% url 'checkout' %}" id="checkout-form">
+      {% csrf_token %}
+
+      <div style="display: grid; grid-template-columns: 1.6fr 1fr; gap: 32px; align-items: start;">
+        
+        <!-- LEFT COLUMN -->
+        <div style="display: flex; flex-direction: column; gap: 24px;">
+
+          <!-- 1. Customer Contact Details (Mandatory Phone) -->
+          <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px;">
+            <h2 style="font-size: 17px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+              <span>👤</span> Contact Information
+            </h2>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+              <div>
+                <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px;">
+                  Phone Number <span style="color: var(--chili);">*</span>
+                </label>
+                <input 
+                  type="tel" 
+                  name="phone" 
+                  value="{{ user.phone|default:'' }}" 
+                  placeholder="e.g. 9876543210" 
+                  pattern="[0-9]{10}"
+                  maxlength="10"
+                  required 
+                  style="width: 100%; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px;"
+                >
+                <small style="color: var(--charcoal-soft); font-size: 11px;">10-digit mobile number for delivery updates</small>
+              </div>
+
+              <div>
+                <label style="display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px;">Email Address</label>
+                <input 
+                  type="email" 
+                  name="email" 
+                  value="{{ user.email|default:'' }}" 
+                  placeholder="your.email@example.com" 
+                  style="width: 100%; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; font-size: 14px;"
+                >
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. Delivery Address Selection & Add New Address -->
+          <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+              <h2 style="font-size: 17px; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 8px;">
+                <span>📍</span> Delivery Address
+              </h2>
+            </div>
+
+            {% if addresses %}
+              <!-- Saved Address Cards List -->
+              <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px;">
+                {% for addr in addresses %}
+                  <label style="display: flex; align-items: flex-start; gap: 12px; border: 1px solid var(--line); padding: 14px; border-radius: 10px; cursor: pointer; background: var(--mist);" class="address-option-label">
+                    <input type="radio" name="selected_address" value="{{ addr.id }}" {% if forloop.first %}checked{% endif %} onchange="handleAddressChange(this.value)" style="margin-top: 4px;">
+                    <div>
+                      <strong style="color: var(--charcoal);">{{ addr.line1 }}</strong>
+                      {% if addr.landmark %}<div style="font-size: 13px; color: var(--charcoal-soft);">Landmark: {{ addr.landmark }}</div>{% endif %}
+                      <div class="mono" style="font-size: 12px; color: var(--leaf); margin-top: 2px;">PIN: {{ addr.pincode }}</div>
+                    </div>
+                  </label>
+                {% endfor %}
+
+                <!-- "Add New Address" Radio Button Option -->
+                <label style="display: flex; align-items: center; gap: 12px; border: 1px dashed var(--leaf); padding: 14px; border-radius: 10px; cursor: pointer; background: rgba(47, 107, 79, 0.04);" class="address-option-label">
+                  <input type="radio" name="selected_address" value="new" onchange="handleAddressChange(this.value)">
+                  <strong style="color: var(--leaf);">+ Add & Deliver to a New Address</strong>
                 </label>
               </div>
+
+              <!-- New Address Form (Hidden by default when saved address is checked) -->
+              <div id="new-address-form-box" style="display: none; flex-direction: column; gap: 12px; background: var(--mist); padding: 18px; border-radius: 12px; border: 1px solid var(--line);">
+                <h4 style="font-size: 14px; font-weight: 700; margin: 0 0 6px 0; color: var(--charcoal);">Enter New Address Details</h4>
+                <div>
+                  <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px;">Flat / House No. / Building / Street *</label>
+                  <input type="text" id="line1" name="line1" placeholder="e.g. Flat 402, Sunshine Heights, SV Road" style="width: 100%; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; font-size: 13px;">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                  <div>
+                    <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px;">Landmark (Optional)</label>
+                    <input type="text" id="landmark" name="landmark" placeholder="e.g. Near Metro Station" style="width: 100%; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; font-size: 13px;">
+                  </div>
+                  <div>
+                    <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px;">Pincode *</label>
+                    <input type="text" id="pincode" name="pincode" placeholder="e.g. 400001" style="width: 100%; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; font-size: 13px;">
+                  </div>
+                </div>
+              </div>
+
+            {% else %}
+              <!-- Direct Input if User Has Zero Saved Addresses -->
+              <input type="hidden" name="selected_address" value="new">
+              <div style="display: flex; flex-direction: column; gap: 12px;">
+                <div>
+                  <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px;">Flat / House No. / Building / Street *</label>
+                  <input type="text" name="line1" required placeholder="e.g. Flat 402, Sunshine Heights, SV Road" style="width: 100%; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; font-size: 13px;">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                  <div>
+                    <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px;">Landmark (Optional)</label>
+                    <input type="text" name="landmark" placeholder="e.g. Near Metro Station" style="width: 100%; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; font-size: 13px;">
+                  </div>
+                  <div>
+                    <label style="display: block; font-size: 12px; font-weight: 600; margin-bottom: 4px;">Pincode *</label>
+                    <input type="text" name="pincode" required placeholder="e.g. 400001" style="width: 100%; padding: 10px 14px; border: 1px solid var(--line); border-radius: 8px; font-size: 13px;">
+                  </div>
+                </div>
+              </div>
+            {% endif %}
+          </div>
+
+          <!-- 3. Delivery Speed -->
+          <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px;">
+            <h2 style="font-size: 17px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+              <span>⚡</span> Delivery Speed
+            </h2>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+              <label style="flex: 1; min-width: 200px; display: flex; align-items: center; gap: 12px; border: 1px solid var(--leaf); background: rgba(47, 107, 79, 0.05); padding: 14px; border-radius: 10px; cursor: pointer;">
+                <input type="radio" name="delivery_mode" value="instant" checked>
+                <div>
+                  <strong style="color: var(--leaf);">Instant Express Delivery</strong>
+                  <div style="font-size: 12px; color: var(--charcoal-soft);">Delivered within 30 minutes</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- 4. Payment Method -->
+          <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px;">
+            <h2 style="font-size: 17px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+              <span>💳</span> Payment Option
+            </h2>
+            <label style="display: flex; align-items: center; gap: 12px; border: 1px solid var(--line); padding: 14px; border-radius: 10px; cursor: pointer; background: var(--mist);">
+              <input type="radio" name="payment_method" value="COD" checked>
+              <div>
+                <strong>Cash on Delivery / UPI QR on Delivery</strong>
+                <div style="font-size: 12px; color: var(--charcoal-soft);">Pay safely upon receiving your items</div>
+              </div>
+            </label>
+          </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN: Bill Summary -->
+        <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px; position: sticky; top: 90px;">
+          <h2 style="font-size: 18px; font-weight: 700; margin-bottom: 16px;">Order Summary</h2>
+
+          <!-- Items list preview -->
+          <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; max-height: 220px; overflow-y: auto; padding-right: 4px;">
+            {% for item in cart_items %}
+              <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px;">
+                <div>
+                  <span style="font-weight: 600;">{{ item.product.name }}</span>
+                  <span style="color: var(--charcoal-soft); font-size: 12px;"> × {{ item.quantity }}</span>
+                </div>
+                <span class="mono" style="font-weight: 600;">₹{{ item.total_price }}</span>
+              </div>
             {% endfor %}
-          {% else %}
-            <p class="text-muted">No saved addresses found.</p>
-            <a href="#" class="btn btn-sm btn-outline-primary">+ Add New Address</a>
-          {% endif %}
-        </div>
+          </div>
 
-        <div class="card shadow-sm border-0 p-3">
-          <h5 class="fw-bold mb-3">Payment Method</h5>
-          <div class="form-check mb-2">
-            <input class="form-check-input" type="radio" name="payment_method" value="COD" id="cod" checked>
-            <label class="form-check-label" for="cod">Cash on Delivery (COD)</label>
-          </div>
-          <div class="form-check">
-            <input class="form-check-input" type="radio" name="payment_method" value="UPI" id="upi">
-            <label class="form-check-label" for="upi">Online / UPI</label>
-          </div>
-        </div>
-      </div>
+          <hr style="border: none; border-top: 1px solid var(--line); margin: 16px 0;">
 
-      <!-- Order Summary -->
-      <div class="col-md-5">
-        <div class="card shadow-sm border-0 p-3 bg-light">
-          <h5 class="fw-bold mb-3">Order Summary</h5>
-          <div class="d-flex justify-content-between mb-2">
-            <span>Items Total</span>
-            <span>₹{{ subtotal|default:"0.00" }}</span>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; color: var(--charcoal-soft);">
+            <span>Subtotal</span>
+            <span class="mono" style="color: var(--charcoal); font-weight: 600;">₹{{ subtotal }}</span>
           </div>
-          <div class="d-flex justify-content-between mb-2">
+
+          <div style="display: flex; justify-content: space-between; margin-bottom: 14px; font-size: 14px; color: var(--charcoal-soft);">
             <span>Delivery Fee</span>
-            <span>₹{{ delivery_fee|default:"0.00" }}</span>
+            <span class="mono">
+              {% if delivery_fee == 0 %}
+                <span style="color: var(--leaf); font-weight: 700;">FREE</span>
+              {% else %}
+                <span style="color: var(--charcoal); font-weight: 600;">₹{{ delivery_fee }}</span>
+              {% endif %}
+            </span>
           </div>
-          <hr>
-          <div class="d-flex justify-content-between fw-bold fs-5 mb-3">
+
+          <div style="display: flex; justify-content: space-between; padding-top: 14px; border-top: 1px solid var(--line); font-size: 18px; font-weight: 700;">
             <span>Grand Total</span>
-            <span class="text-success">₹{{ grand_total|default:"0.00" }}</span>
+            <span class="mono" style="color: var(--leaf);">₹{{ grand_total }}</span>
           </div>
-          <button type="submit" class="btn btn-success w-100 py-2 fw-bold">Place Order</button>
+
+          <button type="submit" class="btn btn-primary" style="display: flex; justify-content: center; width: 100%; margin-top: 24px; padding: 14px; font-size: 15px;">
+            Place Order (₹{{ grand_total }}) →
+          </button>
         </div>
+
       </div>
-    </div>
-  </form>
-</div>
+    </form>
+
+  </div>
+</section>
+
+<script>
+function handleAddressChange(val) {
+  const newBox = document.getElementById('new-address-form-box');
+  const line1 = document.getElementById('line1');
+  const pincode = document.getElementById('pincode');
+
+  if (val === 'new') {
+    newBox.style.display = 'flex';
+    if (line1) line1.required = true;
+    if (pincode) pincode.required = true;
+  } else {
+    newBox.style.display = 'none';
+    if (line1) line1.required = false;
+    if (pincode) pincode.required = false;
+  }
+}
+</script>
 {% endblock %}

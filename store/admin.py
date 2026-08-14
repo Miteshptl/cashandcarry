@@ -57,11 +57,11 @@ class ProductBundleAdmin(admin.ModelAdmin):
 class OrderItemInline(admin.TabularInline):
     model = OrderItem
     extra = 0
-    readonly_fields = ("product", "quantity", "price_at_purchase", "fulfillment_status")
+    readonly_fields = ("product", "quantity", "unit_price", "fulfillment_status")
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ("id", "user", "order_status", "payment_status", "delivery_mode", "total", "created_at")
+    list_display = ("id", "user", "order_status", "payment_status", "delivery_mode", "total_amount", "created_at")
     list_filter = ("order_status", "payment_status", "delivery_mode")
     search_fields = ("id", "user__username")
     inlines = [OrderItemInline]

@@ -1,62 +1,78 @@
 {% extends 'base.html' %}
 
-{% block title %}Live Orders Console — CnC{% endblock %}
+{% block title %}Live Orders — CnC Operations{% endblock %}
 
 {% block content %}
-<section class="section">
+<section class="section" style="padding: 32px 0; min-height: 80vh;">
   <div class="wrap">
     
-    <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
       <div>
-        <span class="mono" style="font-size: 11px; color: var(--turmeric-dark); font-weight: 600; text-transform: uppercase;">Store Fulfillment</span>
-        <h1 class="display" style="font-size: 26px; color: var(--charcoal); margin-top: 2px;">Live Customer Orders</h1>
+        <h1 class="display" style="font-size: 26px; font-weight: 700; margin: 0 0 4px 0;">⚡ Live Order Queue</h1>
+        <p style="color: var(--charcoal-soft); font-size: 13px; margin: 0;">Review incoming orders and update delivery status.</p>
       </div>
-      <a href="{% url 'dashboard' %}" class="btn btn-secondary" style="font-size: 13px;">← Back to Dashboard</a>
+      <a href="{% url 'dashboard' %}" class="btn btn-secondary" style="font-size: 13px; padding: 8px 16px;">
+        ← Back to Dashboard
+      </a>
     </div>
 
-    <div style="display: flex; flex-direction: column; gap: 16px;">
-      {% for order in orders %}
-      <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 20px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid var(--line); padding-bottom: 10px;">
-          <div>
-            <span class="mono" style="font-size: 16px; font-weight: 700; color: var(--leaf);">Order #{{ order.id }}</span>
-            <span style="font-size: 12px; color: var(--charcoal-soft);"> · Customer: <strong>{{ order.user.username }}</strong></span>
-          </div>
-          <div style="display: flex; gap: 8px; align-items: center;">
-            <span class="mono" style="font-size: 11px; background: var(--mist); border: 1px solid var(--line); padding: 4px 8px; border-radius: 4px; font-weight: 600;">
-              MODE: {{ order.delivery_mode|upper }}
-            </span>
-            <span class="mono" style="font-size: 11px; background: var(--turmeric); color: var(--charcoal); padding: 4px 8px; border-radius: 4px; font-weight: 600;">
-              STATUS: {{ order.get_order_status_display }}
-            </span>
-          </div>
-        </div>
+    {% if orders %}
+      <div style="display: flex; flex-direction: column; gap: 16px;">
+        {% for order in orders %}
+          <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 20px;">
+            
+            <!-- Order Header -->
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--line);">
+              <div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <strong class="mono" style="font-size: 16px; color: var(--charcoal);">Order #{{ order.id }}</strong>
+                  <span style="font-size: 12px; color: var(--charcoal-soft);">{{ order.created_at|date:"M d · h:i A" }}</span>
+                </div>
+                <div style="font-size: 13px; color: var(--charcoal-soft); margin-top: 2px;">
+                  Customer: <strong>{{ order.user.username }}</strong> ({{ order.user.phone|default:"No phone" }}) · Deliver to: {{ order.address.line1 }} (PIN: {{ order.address.pincode }})
+                </div>
+              </div>
 
-        <div style="font-size: 13px; color: var(--charcoal-soft); margin-bottom: 16px;">
-          Address: {{ order.address.line1 }}, {{ order.address.pincode }} | Subtotal: <strong class="mono">₹{{ order.subtotal }}</strong> | Total: <strong class="mono" style="color: var(--leaf);">₹{{ order.total }}</strong>
-        </div>
+              <!-- Quick Status Update Form -->
+              <form method="POST" action="{% url 'live_orders' %}" style="display: flex; align-items: center; gap: 8px;">
+                {% csrf_token %}
+                <input type="hidden" name="order_id" value="{{ order.id }}">
+                <select name="order_status" style="padding: 6px 12px; border: 1px solid var(--line); border-radius: 8px; font-size: 13px; font-weight: 600;">
+                  <option value="pending_acceptance" {% if order.order_status == 'pending_acceptance' %}selected{% endif %}>Pending</option>
+                  <option value="accepted" {% if order.order_status == 'accepted' %}selected{% endif %}>Accepted</option>
+                  <option value="packing" {% if order.order_status == 'packing' %}selected{% endif %}>Packing</option>
+                  <option value="out_for_delivery" {% if order.order_status == 'out_for_delivery' %}selected{% endif %}>Out for Delivery</option>
+                  <option value="delivered" {% if order.order_status == 'delivered' %}selected{% endif %}>Delivered</option>
+                  <option value="rejected" {% if order.order_status == 'rejected' %}selected{% endif %}>Rejected</option>
+                </select>
+                <button type="submit" class="btn btn-primary" style="padding: 6px 14px; font-size: 12px;">Update</button>
+              </form>
+            </div>
 
-        <form method="post" style="display: flex; gap: 10px; align-items: center;">
-          {% csrf_token %}
-          <input type="hidden" name="order_id" value="{{ order.id }}">
-          <select name="order_status" style="padding: 8px; border: 1px solid var(--line); border-radius: 8px; font-size: 12px;" class="mono">
-            <option value="pending_acceptance">Pending Acceptance</option>
-            <option value="accepted">Accepted</option>
-            <option value="preparing">Preparing</option>
-            <option value="packed">Packed</option>
-            <option value="out_for_delivery">Out for Delivery</option>
-            <option value="delivered">Delivered</option>
-            <option value="rejected">Rejected</option>
-          </select>
-          <button type="submit" class="btn btn-primary" style="padding: 8px 14px; font-size: 12px;">Update Status</button>
-        </form>
+            <!-- Items Ordered -->
+            <div style="display: flex; flex-direction: column; gap: 6px; font-size: 13px;">
+              {% for item in order.items.all %}
+                <div style="display: flex; justify-content: space-between;">
+                  <span>{{ item.product.name }} × <strong>{{ item.quantity }}</strong></span>
+                  <span class="mono" style="color: var(--charcoal-soft);">₹{{ item.total_price }}</span>
+                </div>
+              {% endfor %}
+            </div>
+
+            <!-- Order Total Footer -->
+            <div style="display: flex; justify-content: space-between; margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--line); font-size: 13px;">
+              <span>Payment Mode: <strong>{{ order.payment_method }}</strong></span>
+              <span>Total: <strong class="mono" style="color: var(--leaf); font-size: 15px;">₹{{ order.total_amount }}</strong></span>
+            </div>
+
+          </div>
+        {% endfor %}
       </div>
-      {% empty %}
-      <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 32px; text-align: center; color: var(--charcoal-soft);">
-        No live orders active right now.
+    {% else %}
+      <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 48px; text-align: center;">
+        <p style="color: var(--charcoal-soft); margin: 0; font-size: 14px;">No active orders in the queue.</p>
       </div>
-      {% endfor %}
-    </div>
+    {% endif %}
 
   </div>
 </section>

@@ -1,45 +1,47 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ product.name }} — CnC{% endblock %}
+{% block title %}{{ product.name }} — CnC Express{% endblock %}
 
 {% block content %}
 <section class="section">
   <div class="wrap">
-    <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 32px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center;">
+    <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 32px;" class="d-flex flex-column flex-md-row gap-4 align-items-center">
       
-      <!-- Product Image -->
-      <div style="height: 320px; background: var(--mist); border-radius: 12px; display: flex; align-items: center; justify-content: center; background-size: cover; background-position: center; {% if product.image_url %}background-image: url('{{ product.image_url }}');{% endif %}">
-        {% if not product.image_url %}
-          <span style="color: var(--charcoal-soft); font-size: 14px;">No image available</span>
-        {% endif %}
+      <!-- Image Frame (Uncropped, Full Fit) -->
+      <div style="flex: 1; height: 350px; width: 100%; display: flex; align-items: center; justify-content: center; background: var(--mist); border-radius: 12px; padding: 16px;">
+        <img src="{{ product.get_image }}" alt="{{ product.name }}" style="max-height: 100%; max-width: 100%; object-fit: contain;">
       </div>
 
-      <!-- Product Meta -->
-      <div>
-        <div class="mono" style="font-size: 12px; color: var(--turmeric-dark); text-transform: uppercase; margin-bottom: 8px;">
-          {{ product.brand|default:"Generic" }}
-        </div>
-        <h1 class="display" style="font-size: 32px; margin-bottom: 8px;">{{ product.name }}</h1>
-        <div style="font-size: 13px; color: var(--charcoal-soft); margin-bottom: 16px;">
-          Unit: {{ product.unit }} | Category: {{ product.category.name }}
-        </div>
+      <!-- Details -->
+      <div style="flex: 1.2;">
+        {% if product.brand %}
+          <span class="mono" style="font-size: 11px; color: var(--turmeric-dark); font-weight: 600; text-transform: uppercase;">{{ product.brand }}</span>
+        {% endif %}
+        
+        <h1 class="display" style="font-size: 28px; color: var(--charcoal); margin-top: 4px; margin-bottom: 4px;">{{ product.name }}</h1>
+        <div style="font-size: 13px; color: var(--charcoal-soft); margin-bottom: 16px;">Unit: {{ product.unit }}</div>
 
-        <div class="mono" style="font-size: 24px; font-weight: 600; margin-bottom: 20px;">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
           {% if product.discounted_price %}
-            <span style="text-decoration: line-through; color: #A9B1A5; font-size: 18px; margin-right: 8px;">₹{{ product.price }}</span>
-            ₹{{ product.discounted_price }}
+            <span class="mono" style="font-size: 24px; font-weight: 700; color: var(--leaf);">₹{{ product.discounted_price }}</span>
+            <span class="mono strike" style="font-size: 16px; color: var(--charcoal-soft); text-decoration: line-through;">₹{{ product.price }}</span>
+            <span style="font-size: 11px; background: rgba(216, 73, 46, 0.1); color: var(--chili); border: 1px solid var(--chili); padding: 2px 8px; border-radius: 4px; font-weight: 600;">OFFER</span>
           {% else %}
-            ₹{{ product.price }}
+            <span class="mono" style="font-size: 24px; font-weight: 700; color: var(--charcoal);">₹{{ product.price }}</span>
           {% endif %}
         </div>
 
-        <p style="font-size: 14px; color: var(--charcoal-soft); margin-bottom: 24px; line-height: 1.6;">
-          {{ product.description|default:"Freshly sourced items delivered right to your doorstep." }}
-        </p>
+        {% if product.description %}
+          <div style="margin-bottom: 24px; border-top: 1px solid var(--line); padding-top: 16px;">
+            <h6 style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--charcoal-soft); margin-bottom: 6px;">Description</h6>
+            <p style="font-size: 14px; color: var(--charcoal); line-height: 1.6;">{{ product.description }}</p>
+          </div>
+        {% endif %}
 
-        <button class="btn btn-primary" style="width: 100%; justify-content: center; padding: 14px;">
-          Add to Cart
-        </button>
+        <div style="display: flex; gap: 12px;">
+            <button type="button" class="btn btn-primary" style="padding: 12px 24px;" onclick="addToCart({{ product.id }})">  + Add to Cart</button>
+            <a href="{% url 'cart' %}" class="btn btn-secondary" style="padding: 12px 24px;">View Cart</a>
+        </div>
       </div>
 
     </div>

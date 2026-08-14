@@ -1,40 +1,72 @@
 {% extends 'base.html' %}
 
 {% block content %}
+
+  <!-- Carousel Header -->
+  <div id="carouselExampleAutoplaying" class="carousel slide" data-bs-ride="carousel">
+    <div class="carousel-inner">
+      <div class="carousel-item active">
+        <a href="{% url 'product_list' %}">
+        <img src="/static/slide/Gemini_Generated_Image_d4188hd4188hd418.png" class="d-block w-100" alt="Special Deals">
+        </a>
+      </div>
+      <div class="carousel-item">
+        <img src="..." class="d-block w-100" alt="Fresh Produce">
+      </div>
+      <div class="carousel-item">
+        <img src="..." class="d-block w-100" alt="Daily Essentials">
+      </div>
+    </div>
+    <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleAutoplaying" data-bs-slide="prev">
+      <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+      <span class="visually-hidden">Previous</span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleAutoplaying" data-bs-slide="next">
+      <span class="carousel-control-next-icon" aria-hidden="true"></span>
+      <span class="visually-hidden">Next</span>
+    </button>
+  </div>
+
   <!-- Hero Section -->
   <section class="hero">
     <div class="wrap">
       <div>
-        <div class="hero-eyebrow">Your neighbourhood supermarket, online</div>
-        <h1 class="display">Fresh groceries,<br>on your schedule.</h1>
-        <p>Order in the next 45 minutes for delivery within the hour, or schedule a free delivery slot for whenever suits you.</p>
+        <div class="hero-eyebrow">Your neighbourhood supermarket, delivered fast</div>
+        <h1 class="display">Fresh groceries,<br>at your doorstep.</h1>
+        <p>Order fresh daily essentials and groceries now and receive your package delivered to your door within 30 minutes.</p>
         <div class="hero-ctas">
-          <button class="btn btn-primary">Shop instant delivery</button>
-          <button class="btn btn-secondary">Schedule for later</button>
+          <a href="{% url 'product_list' %}" class="btn btn-primary">⚡ Shop Instant Delivery</a>
+          <a href="#todays-deals" class="btn btn-secondary">Explore Today's Deals</a>
         </div>
         <div class="trust-strip">
-          <span>FSSAI LIC. 10023XXXXXXXXX</span>
+          <span>FSSAI LICENSED</span>
           <span>GSTIN VERIFIED SELLER</span>
-          <span>SECURE PAYMENTS VIA RAZORPAY</span>
+          <span>SECURE PAYMENTS</span>
         </div>
       </div>
+
+      <!-- Single Instant Delivery Card -->
       <div class="mode-card">
-        <div class="mode-card-title">Choose delivery mode</div>
-        <div class="mode-toggle">
-          <div class="opt active">⚡ Instant · 20 min</div>
-          <div class="opt">📅 Scheduled · Free</div>
+        <div class="mode-card-title d-flex align-items-center gap-2">
+          <span>⚡</span> Express Delivery
+        </div>
+        
+        <div class="p-3 my-2 border rounded bg-light">
+          <div class="fw-bold text-success fs-5">Delivered in 30 Mins</div>
+          <small class="text-muted">Fast &amp; reliable local doorstep delivery</small>
+        </div>
+
+        <div class="mode-detail">
+            <span class="label">Delivery Fee</span>
+            <span class="value">₹29 <small class="text-muted fw-normal">(Free above ₹100)</small></span>
         </div>
         <div class="mode-detail">
-          <span class="label">Delivery fee</span>
-          <span class="value">₹29</span>
-        </div>
-        <div class="mode-detail">
-          <span class="label">Order cutoff today</span>
+          <span class="label">Order Cutoff Today</span>
           <span class="value">9:45 PM</span>
         </div>
         <div class="mode-detail">
-          <span class="label">Serving pincode</span>
-          <span class="value">400101</span>
+          <span class="label">Serviceable Region</span>
+          <span class="value">Mumbai Local</span>
         </div>
       </div>
     </div>
@@ -61,7 +93,7 @@
   </section>
 
   <!-- Product Deals Section -->
-  <section class="band-mist">
+  <section class="band-mist" id="todays-deals">
     <div class="section">
       <div class="wrap">
         <div class="section-head">
@@ -71,7 +103,7 @@
         <div class="product-grid">
           {% for product in products %}
           <div class="product-card">
-            <div class="product-media" style="background:#EAF3E4; {% if product.get_image %}background-image: url('{{ product.get_image }}'); background-size: cover; background-position: center;{% endif %}">
+            <div class="product-media" style="background:#EAF3E4; background-repeat: no-repeat; background-position: center; background-size: contain; {% if product.get_image %}background-image: url('{{ product.get_image }}');{% endif %}">
               {% if product.discounted_price %}
                 <span class="product-tag">OFFER</span>
               {% endif %}
@@ -81,7 +113,8 @@
                 <a href="{% url 'product_detail' product.id %}">{{ product.name }}</a>
               </div>
               <div class="product-unit">{{ product.unit }}</div>
-              <div class="product-footer">
+              
+              <div class="product-footer" style="display: flex; align-items: center; justify-content: space-between; margin-top: 8px;">
                 <div class="product-price">
                   {% if product.discounted_price %}
                     <span class="strike">₹{{ product.price }}</span>₹{{ product.discounted_price }}
@@ -89,7 +122,12 @@
                     ₹{{ product.price }}
                   {% endif %}
                 </div>
-                <button class="add-btn">+</button>
+
+                <!-- Zepto Dynamic Widget Container -->
+                <div id="cart-widget-{{ product.id }}" class="cart-widget-container" data-product-id="{{ product.id }}">
+                  <button type="button" class="btn-zepto-add" onclick="updateCartWidget({{ product.id }}, 'increase')">ADD</button>
+                </div>
+
               </div>
             </div>
           </div>
@@ -100,7 +138,36 @@
       </div>
     </div>
   </section>
+
+  <!-- JavaScript Initializer for Cart Widgets -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      try {
+        const cartState = JSON.parse('{{ cart_quantities_json|safe }}');
+
+        document.querySelectorAll(".cart-widget-container").forEach(container => {
+          const pId = container.getAttribute("data-product-id");
+          const qty = cartState[pId] || 0;
+
+          if (qty > 0) {
+            container.innerHTML = `
+              <div class="qty-btn-group">
+                <button type="button" class="qty-btn" onclick="updateCartWidget(${pId}, 'decrease')">-</button>
+                <span class="qty-val">${qty}</span>
+                <button type="button" class="qty-btn" onclick="updateCartWidget(${pId}, 'increase')">+</button>
+              </div>
+            `;
+          }
+        });
+      } catch (err) {
+        console.error("Error initializing cart widgets:", err);
+      }
+    });
+  </script>
+
 {% endblock %}
+
+
 
 
 

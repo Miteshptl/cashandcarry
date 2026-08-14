@@ -1,155 +1,125 @@
 {% extends 'base.html' %}
 
-{% block title %}Management Dashboard — CnC{% endblock %}
+{% block title %}Store Dashboard — CnC Operations{% endblock %}
 
 {% block content %}
-<section class="section">
+<section class="section" style="padding: 32px 0; min-height: 80vh;">
   <div class="wrap">
-    
-    <!-- Top Bar & Role Badge -->
-    <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px; margin-bottom: 28px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+
+    <!-- Header Row with Quick Action Buttons -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
       <div>
-        <div class="mono" style="font-size: 11px; color: var(--turmeric-dark); font-weight: 600; text-transform: uppercase;">
-          Internal Management Portal
-        </div>
-        <h1 class="display" style="font-size: 26px; color: var(--charcoal); margin-top: 2px;">
-          Welcome, {{ user.username }}
-        </h1>
+        <h1 class="display" style="font-size: 26px; font-weight: 700; margin: 0 0 4px 0;">Operations Dashboard</h1>
+        <p style="color: var(--charcoal-soft); font-size: 13px; margin: 0;">Live store performance, pending orders, refunds, and inventory health.</p>
       </div>
 
-      <!-- Role Pill -->
-      <div style="display: flex; align-items: center; gap: 12px;">
-        <span class="mono" style="font-size: 12px; background: var(--leaf-dark); color: var(--white); padding: 6px 14px; border-radius: 20px; font-weight: 600; text-transform: uppercase;">
-          🛡️ Role: {{ user.get_role_display }}
-        </span>
-        {% if user.is_staff or user.is_superuser %}
-          <a href="/admin/" target="_blank" class="btn btn-secondary" style="border-color: var(--leaf); color: var(--leaf); font-size: 13px;">
-            Open Django Admin ↗
-          </a>
-        {% endif %}
+      <!-- Action Buttons -->
+      <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <a href="{% url 'manage_refunds' %}" class="btn btn-secondary" style="font-size: 13px; padding: 8px 16px; border-color: var(--chili); color: var(--chili);">
+          🔄 Refund Requests ({% if pending_refunds_count %}{{ pending_refunds_count }}{% else %}0{% endif %})
+        </a>
+        <a href="{% url 'live_orders' %}" class="btn btn-primary" style="font-size: 13px; padding: 8px 16px;">
+          ⚡ Live Order Queue
+        </a>
       </div>
     </div>
 
-    <!-- Overview Metrics Row (Manager & Admin only) -->
-    {% if user.role == 'manager' or user.role == 'admin' %}
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 28px;">
-      <div class="mode-card">
-        <div class="mode-card-title">Today's Orders</div>
-        <div class="mono" style="font-size: 28px; font-weight: 600; color: var(--leaf); margin: 6px 0;">{{ pending_orders_count|default:"0" }}</div>
-        <span style="font-size: 12px; color: var(--charcoal-soft);">Pending Acceptance</span>
-      </div>
-
-      <div class="mode-card">
-        <div class="mode-card-title">Picking & Packing</div>
-        <div class="mono" style="font-size: 28px; font-weight: 600; color: var(--turmeric-dark); margin: 6px 0;">{{ picking_count|default:"0" }}</div>
-        <span style="font-size: 12px; color: var(--charcoal-soft);">Active on floor</span>
-      </div>
-
-      <div class="mode-card">
-        <div class="mode-card-title">Low Stock Items</div>
-        <div class="mono" style="font-size: 28px; font-weight: 600; color: var(--chili); margin: 6px 0;">{{ low_stock_count|default:"0" }}</div>
-        <span style="font-size: 12px; color: var(--charcoal-soft);">Requires restock</span>
-      </div>
-    </div>
-    {% endif %}
-
-    <!-- Main Content Area -->
-    <div style="display: grid; grid-template-columns: 1.4fr 0.8fr; gap: 28px; align-items: start;">
+    <!-- Summary Metrics Cards -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 28px;">
       
-      <!-- Left Column: Active Orders / Fulfillment Queue -->
-      <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; border-bottom: 1px solid var(--line); padding-bottom: 12px;">
-          <h2 class="display" style="font-size: 18px; color: var(--charcoal);">
-            {% if user.role == 'employee' %}Order Fulfillment Queue{% else %}Recent Store Activity{% endif %}
-          </h2>
-          <span class="mono" style="font-size: 11px; color: var(--charcoal-soft);">LIVE ORDERS</span>
-        </div>
+      <div style="background: var(--white); border: 1px solid var(--line); border-radius: 14px; padding: 20px;">
+        <div style="font-size: 12px; color: var(--charcoal-soft); font-weight: 600; text-transform: uppercase;">Pending Orders</div>
+        <div class="mono" style="font-size: 28px; font-weight: 700; color: var(--turmeric-dark); margin-top: 6px;">{{ pending_orders_count }}</div>
+      </div>
 
-        <div style="display: flex; flex-direction: column; gap: 14px;">
-          {% for order in orders %}
-          <div style="border: 1px solid var(--line); border-radius: 12px; padding: 16px; background: var(--mist);">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
-              <div>
-                <span class="mono" style="font-weight: 600; font-size: 14px; color: var(--leaf);">Order #{{ order.id }}</span>
-                <span style="font-size: 12px; color: var(--charcoal-soft);"> · {{ order.created_at|date:"h:i A" }}</span>
-              </div>
-              <span class="mono" style="font-size: 10px; background: var(--turmeric); color: var(--charcoal); padding: 3px 8px; border-radius: 4px; font-weight: 600;">
-                {{ order.get_order_status_display }}
-              </span>
-            </div>
+      <div style="background: var(--white); border: 1px solid var(--line); border-radius: 14px; padding: 20px;">
+        <div style="font-size: 12px; color: var(--charcoal-soft); font-weight: 600; text-transform: uppercase;">Active / Packing</div>
+        <div class="mono" style="font-size: 28px; font-weight: 700; color: var(--leaf); margin-top: 6px;">{{ active_orders_count }}</div>
+      </div>
 
-            <div style="font-size: 13px; color: var(--charcoal-soft); margin-bottom: 12px;">
-              Customer: <strong>{{ order.user.username }}</strong> | Mode: <strong style="text-transform: uppercase;">{{ order.delivery_mode }}</strong>
-            </div>
-
-            <!-- Action Controls based on Role -->
-            <div style="display: flex; gap: 8px; border-top: 1px dashed var(--line); padding-top: 10px;">
-              {% if user.role == 'employee' or user.role == 'manager' or user.role == 'admin' %}
-                <button class="btn btn-primary" style="padding: 6px 12px; font-size: 12px;">Accept Order</button>
-                <button class="btn btn-secondary" style="border-color: var(--chili); color: var(--chili); padding: 6px 12px; font-size: 12px;">Reject</button>
-              {% endif %}
-            </div>
-          </div>
-          {% empty %}
-          <p style="font-size: 13px; color: var(--charcoal-soft); padding: 12px 0;">No active orders in queue.</p>
-          {% endfor %}
+      <!-- Pending Refunds Card -->
+      <div style="background: var(--white); border: 1px solid var(--line); border-radius: 14px; padding: 20px;">
+        <div style="font-size: 12px; color: var(--charcoal-soft); font-weight: 600; text-transform: uppercase;">Pending Refunds</div>
+        <div class="mono" style="font-size: 28px; font-weight: 700; color: var(--chili); margin-top: 6px;">
+          <a href="{% url 'manage_refunds' %}">{{ pending_refunds_count }}</a>
         </div>
       </div>
 
-      <!-- Right Column: Role-Based Action Cards with Custom Routes -->
-      <div style="display: flex; flex-direction: column; gap: 20px;">
-        
-        <!-- Employee Panel -->
-        {% if user.role == 'employee' or user.role == 'manager' or user.role == 'admin' %}
-        <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 20px;">
-          <h3 class="display" style="font-size: 16px; color: var(--leaf); margin-bottom: 12px;">📦 Order & Packing Tools</h3>
-          <ul style="list-style: none; display: flex; flex-direction: column; gap: 10px; font-size: 13px;">
-            <li><a href="{% url 'live_orders' %}" style="color: var(--charcoal-soft); font-weight: 500;">• View All Live Orders</a></li>
-            <li><a href="{% url 'item_picking' %}" style="color: var(--charcoal-soft); font-weight: 500;">• Item Picking & Substitutions</a></li>
-          </ul>
+      <div style="background: var(--white); border: 1px solid var(--line); border-radius: 14px; padding: 20px;">
+        <div style="font-size: 12px; color: var(--charcoal-soft); font-weight: 600; text-transform: uppercase;">Low Stock (&lt;10)</div>
+        <div class="mono" style="font-size: 28px; font-weight: 700; color: var(--turmeric-dark); margin-top: 6px;">{{ low_stock_count }}</div>
+      </div>
+
+    </div>
+
+    <!-- Main Grid: Recent Orders & Stock Watch -->
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 24px; align-items: start;">
+      
+      <!-- Recent Orders Queue -->
+      <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+          <h2 style="font-size: 16px; font-weight: 700; margin: 0;">Recent Orders Queue</h2>
+          <a href="{% url 'live_orders' %}" style="font-size: 13px; color: var(--leaf); font-weight: 600;">View all →</a>
         </div>
+
+        {% if recent_orders %}
+          <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+              <thead>
+                <tr style="border-bottom: 1px solid var(--line); text-align: left; color: var(--charcoal-soft);">
+                  <th style="padding: 8px 10px;">ID</th>
+                  <th style="padding: 8px 10px;">Customer</th>
+                  <th style="padding: 8px 10px;">Items</th>
+                  <th style="padding: 8px 10px;">Total</th>
+                  <th style="padding: 8px 10px;">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for order in recent_orders %}
+                  <tr style="border-bottom: 1px solid var(--line);">
+                    <td class="mono" style="padding: 12px 10px; font-weight: 700;">#{{ order.id }}</td>
+                    <td style="padding: 12px 10px;">
+                      <strong>{{ order.user.username }}</strong>
+                      <div style="font-size: 11px; color: var(--charcoal-soft);">{{ order.address.pincode }}</div>
+                    </td>
+                    <td style="padding: 12px 10px;">{{ order.items.count }} item(s)</td>
+                    <td class="mono" style="padding: 12px 10px; font-weight: 600; color: var(--leaf);">₹{{ order.total_amount }}</td>
+                    <td style="padding: 12px 10px;">
+                      <span style="font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 6px; text-transform: uppercase;
+                        {% if order.order_status == 'delivered' %}background: rgba(47, 107, 79, 0.15); color: var(--leaf);
+                        {% elif order.order_status == 'pending_acceptance' %}background: rgba(232, 163, 61, 0.15); color: var(--turmeric-dark);
+                        {% else %}background: rgba(47, 107, 79, 0.08); color: var(--leaf-dark);{% endif %}">
+                        {{ order.order_status|title }}
+                      </span>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <p style="color: var(--charcoal-soft); font-size: 13px; margin: 0;">No orders found.</p>
         {% endif %}
+      </div>
 
-        <!-- Manager Panel -->
-        {% comment %} {% if user.role == 'manager' or user.role == 'admin' %}
-        <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 20px;">
-          <h3 class="display" style="font-size: 16px; color: var(--leaf); margin-bottom: 12px;">📊 Store Operations</h3>
-          <ul style="list-style: none; display: flex; flex-direction: column; gap: 10px; font-size: 13px;">
-            <li><a href="{% url 'manage_inventory' %}" style="color: var(--charcoal-soft); font-weight: 500;">• Manage Product Stock / Inventory</a></li>
-            <li><a href="{% url 'manage_prices' %}" style="color: var(--charcoal-soft); font-weight: 500;">• Product Prices & Discounts</a></li>
-            <li><a href="{% url 'manage_coupons' %}" style="color: var(--charcoal-soft); font-weight: 500;">• Create Promo Coupons</a></li>
-            <li><a href="{% url 'bulk_import' %}" style="color: var(--charcoal-soft); font-weight: 500;">• Bulk Product Import (.CSV / Excel)</a></li>
-          </ul>
-        </div>
-        {% endif %} {% endcomment %}
+      <!-- Low Stock Sidebar Alert -->
+      <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px;">
+        <h2 style="font-size: 16px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+          <span>⚠️</span> Low Stock Watch
+        </h2>
 
-        <!-- Manager Panel -->
-        {% if user.role == 'manager' or user.role == 'admin' %}
-        <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 20px;">
-        <h3 class="display" style="font-size: 16px; color: var(--leaf); margin-bottom: 12px;">📊 Store Operations</h3>
-        <ul style="list-style: none; display: flex; flex-direction: column; gap: 10px; font-size: 13px;">
-            <li><a href="{% url 'add_product' %}" style="color: var(--leaf); font-weight: 600;">+ Add New Product</a></li>
-            <li><a href="{% url 'add_category' %}" style="color: var(--leaf); font-weight: 600;">+ Add New Category</a></li>
-            <li><a href="{% url 'manage_inventory' %}" style="color: var(--charcoal-soft);">• Manage Product Stock / Inventory</a></li>
-            <li><a href="{% url 'manage_prices' %}" style="color: var(--charcoal-soft);">• Product Prices & Discounts</a></li>
-            <li><a href="{% url 'manage_coupons' %}" style="color: var(--charcoal-soft);">• Create Promo Coupons</a></li>
-            <li><a href="{% url 'bulk_import' %}" style="color: var(--charcoal-soft);">• Bulk Product Import (.CSV / Excel)</a></li>
-        </ul>
-        </div>
+        {% if low_stock_items %}
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            {% for item in low_stock_items %}
+              <div style="display: flex; justify-content: space-between; align-items: center; font-size: 13px; padding-bottom: 8px; border-bottom: 1px solid var(--line);">
+                <span style="font-weight: 600; max-width: 160px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ item.product.name }}</span>
+                <span class="mono" style="color: var(--chili); font-weight: 700;">{{ item.available_quantity }} left</span>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p style="color: var(--charcoal-soft); font-size: 13px; margin: 0;">All inventory stocks are healthy.</p>
         {% endif %}
-
-        <!-- Admin / Owner Panel -->
-        {% if user.role == 'admin' or user.is_superuser %}
-        <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 20px;">
-          <h3 class="display" style="font-size: 16px; color: var(--leaf); margin-bottom: 12px;">👑 Admin & Legal Settings</h3>
-          <ul style="list-style: none; display: flex; flex-direction: column; gap: 10px; font-size: 13px;">
-            <li><a href="{% url 'manage_staff' %}" style="color: var(--charcoal-soft); font-weight: 500;">• Manage Staff & Roles</a></li>
-            <li><a href="{% url 'store_settings' %}" style="color: var(--charcoal-soft); font-weight: 500;">• Store Hours & Cutoff Times</a></li>
-            <li><a href="{% url 'audit_logs' %}" style="color: var(--charcoal-soft); font-weight: 500;">• View Security Audit Logs</a></li>
-          </ul>
-        </div>
-        {% endif %}
-
       </div>
 
     </div>

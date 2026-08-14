@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5,6 +6,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{% block title %}CnC — Fresh groceries, on your schedule{% endblock %}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
   :root{
@@ -18,6 +21,10 @@
     --chili:#D8492E;
     --line:#E3E7DF;
     --white:#FFFFFF;
+
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-display: 'Fraunces', Georgia, serif;
+    --font-mono: 'IBM Plex Mono', monospace;
   }
   *{box-sizing:border-box;margin:0;padding:0;}
   html, body {
@@ -25,14 +32,14 @@
     width: 100%;
   }
   body{
-    font-family:'Inter',sans-serif;
+    font-family:var(--font-body);
     background:var(--mist);
     color:var(--charcoal);
     line-height:1.5;
   }
   a{text-decoration:none;color:inherit;}
-  .display{font-family:'Fraunces',serif;}
-  .mono{font-family:'IBM Plex Mono',monospace;}
+  .display{font-family:var(--font-display);}
+  .mono{font-family:var(--font-mono);}
   .wrap{max-width:1180px;margin:0 auto;padding:0 28px;}
 
   /* Status banner */
@@ -90,7 +97,7 @@
   }
 
   .logo {
-    font-family: 'Fraunces', serif;
+    font-family: var(--font-display);
     font-weight: 700;
     font-size: 26px;
     color: var(--leaf);
@@ -103,6 +110,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 10px;
   }
 
   .dashboard-link {
@@ -116,6 +124,11 @@
     border: 1px solid rgba(47, 107, 79, 0.2);
     padding: 6px 14px;
     border-radius: 20px;
+    transition: all 0.2s ease;
+  }
+  .dashboard-link:hover {
+    background: var(--leaf);
+    color: var(--white);
   }
 
   .header-actions {
@@ -123,6 +136,30 @@
     align-items: center;
     gap: 12px;
     flex-shrink: 0;
+  }
+
+  .user-badge-pill {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--mist);
+    border: 1px solid var(--line);
+    padding: 4px 6px 4px 10px;
+    border-radius: 20px;
+  }
+
+  .logout-btn-mini {
+    background: rgba(216, 73, 46, 0.1);
+    color: var(--chili);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 12px;
+    transition: background 0.15s ease;
+  }
+  .logout-btn-mini:hover {
+    background: var(--chili);
+    color: var(--white);
   }
 
   .icon-btn {
@@ -141,8 +178,8 @@
     color: white;
     font-size: 10px;
     font-weight: 700;
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -190,7 +227,7 @@
     border: none;
     background: transparent;
     outline: none;
-    font-family: 'Inter';
+    font-family: var(--font-body);
     font-size: 14px;
     color: var(--charcoal);
     width: 100%;
@@ -211,7 +248,7 @@
     padding:64px 28px 56px;
   }
   .hero-eyebrow{
-    font-family:'IBM Plex Mono',monospace;
+    font-family:var(--font-mono);
     font-size:12px;font-weight:600;
     letter-spacing:0.06em;
     color:var(--turmeric);
@@ -246,7 +283,7 @@
   .trust-strip{
     display:flex;gap:22px;flex-wrap:wrap;
     font-size:12px;color:#B9CFC0;
-    font-family:'IBM Plex Mono',monospace;
+    font-family:var(--font-mono);
   }
   .trust-strip span{display:flex;align-items:center;gap:6px;}
 
@@ -298,7 +335,7 @@
     margin-bottom:24px;
   }
   .section-head h2{
-    font-family:'Fraunces',serif;
+    font-family:var(--font-display);
     font-size:26px;font-weight:600;
     letter-spacing:-0.01em;
   }
@@ -360,7 +397,7 @@
   .product-tag{
     position:absolute;top:8px;left:8px;
     background:var(--chili);color:var(--white);
-    font-family:'IBM Plex Mono',monospace;
+    font-family:var(--font-mono);
     font-size:10px;font-weight:600;
     padding:3px 6px;border-radius:4px;
   }
@@ -368,17 +405,55 @@
   .product-name{font-size:13px;font-weight:600;margin-bottom:2px;}
   .product-unit{font-size:11px;color:var(--charcoal-soft);margin-bottom:8px;}
   .product-footer{display:flex;justify-content:space-between;align-items:center;}
-  .product-price{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;}
+  .product-price{font-family:var(--font-mono);font-size:13px;font-weight:600;}
   .product-price .strike{
     text-decoration:line-through;color:#A9B1A5;font-weight:500;
     font-size:11px;margin-right:4px;
   }
-  .add-btn{
-    width:28px;height:28px;border-radius:8px;
-    background:var(--leaf);color:var(--white);
-    border:none;font-size:16px;
-    cursor:pointer;
-    display:flex;align-items:center;justify-content:center;
+
+  /* Zepto-Style ADD / Quantity Widget CSS */
+  .btn-zepto-add {
+    background: var(--white);
+    border: 1px solid var(--leaf);
+    color: var(--leaf);
+    font-weight: 700;
+    font-size: 12px;
+    padding: 5px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .btn-zepto-add:hover {
+    background: var(--leaf);
+    color: var(--white);
+  }
+
+  .qty-btn-group {
+    display: inline-flex;
+    align-items: center;
+    background: var(--leaf);
+    color: var(--white);
+    border-radius: 6px;
+    padding: 2px 6px;
+    gap: 8px;
+  }
+
+  .qty-btn {
+    background: transparent;
+    border: none;
+    color: var(--white);
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    padding: 2px 4px;
+    line-height: 1;
+  }
+
+  .qty-val {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 12px;
   }
 
   .band-mist{background:var(--white);border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
@@ -393,9 +468,9 @@
   footer ul{list-style:none;}
   footer li{margin-bottom:9px;font-size:13px;}
   footer li a:hover{color:var(--white);}
-  .footer-logo{font-family:'Fraunces',serif;font-weight:700;font-size:20px;color:var(--white);margin-bottom:10px;}
+  .footer-logo{font-family:var(--font-display);font-weight:700;font-size:20px;color:var(--white);margin-bottom:10px;}
   .footer-desc{font-size:13px;max-width:260px;margin-bottom:16px;}
-  .legal-line{font-size:12px;color:#8B948A;font-family:'IBM Plex Mono',monospace;}
+  .legal-line{font-size:12px;color:#8B948A;font-family:var(--font-mono);}
   .footer-bottom{
     border-top:1px solid #333B33;
     padding-top:20px;
@@ -438,11 +513,13 @@
 </head>
 <body>
 
+{% csrf_token %}
+
   <!-- Status Banner -->
   <div class="status-banner">
     <div class="wrap">
       <span class="status-dot"></span>
-      Delivering to 400001 · Instant delivery available now · Store open till 10:00 PM
+      Delivering to 400101 · Instant delivery available now · Store open till 10:00 PM
     </div>
   </div>
 
@@ -453,29 +530,39 @@
       <!-- TOP ROW: Logo (Left), Dashboard (Center), Actions (Right) -->
       <div class="header-top-row">
         <!-- LEFT: CnC Logo -->
-        <a href="{% url 'home' %}" class="logo">CnC<span>.</span></a>
+        <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'home' %}">
+            <img src="{% static 'images/logo.png' %}" alt="CnC Supermarket" height="38" class="d-inline-block align-text-top">
+        </a>
 
-        <!-- CENTER: Dashboard Button -->
+        <!-- CENTER: Dashboard Link if Staff / Admin -->
         <div class="header-center">
           {% if user.is_authenticated %}
-            {% if user.role != 'customer' or user.is_staff %}
-              <a href="{% url 'dashboard' %}" class="dashboard-link" title="Dashboard">
+            {% if user.role != 'customer' or user.is_staff or user.is_superuser %}
+              <a href="{% url 'dashboard' %}" class="dashboard-link" title="Store Operations Dashboard">
                 📊 Dashboard
               </a>
             {% endif %}
           {% endif %}
         </div>
 
-        <!-- RIGHT: Login / Register / Profile & Cart -->
+        <!-- RIGHT: Login / Register / Profile + Logout & Cart -->
         <div class="header-actions">
           {% if user.is_authenticated %}
-            <!-- Profile Icon -->
-            <a href="{% url 'profile' %}" class="icon-btn" title="{{ user.username }}'s Profile" aria-label="Profile">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                <circle cx="12" cy="7" r="4"/>
-              </svg>
-            </a>
+            <div class="user-badge-pill">
+              <!-- Profile Link -->
+              <a href="{% url 'profile' %}" class="icon-btn" title="{{ user.username }}'s Profile" aria-label="Profile">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+                <span style="font-size: 12px; font-weight: 600; color: var(--charcoal);">{{ user.first_name|default:user.username }}</span>
+              </a>
+
+              <!-- Inline Logout Button -->
+              <a href="{% url 'logout' %}" class="logout-btn-mini" title="Sign Out">
+                Logout
+              </a>
+            </div>
           {% else %}
             <a href="{% url 'login' %}" class="btn btn-secondary" style="padding: 6px 12px; font-size: 12px;">Log In</a>
             <a href="{% url 'register' %}" class="btn btn-primary" style="padding: 6px 12px; font-size: 12px;">Register</a>
@@ -488,7 +575,13 @@
               <circle cx="20" cy="21" r="1"/>
               <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
             </svg>
-            <span class="cart-count">0</span>
+            <span id="cart-count" class="cart-count">
+              {% if request.session.cart %}
+                {{ request.session.cart.values|length }}
+              {% else %}
+                0
+              {% endif %}
+            </span>
           </a>
         </div>
       </div>
@@ -497,7 +590,7 @@
       <div class="header-bottom-row">
         <div class="location-pill">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-6.5-7-11a7 7 0 0 1 14 0c0 4.5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>
-          Deliver to <strong>400001</strong>
+          Deliver to <strong>400101</strong>
         </div>
 
         <div class="search-bar">
@@ -528,7 +621,10 @@
     <div class="wrap">
       <div class="footer-grid">
         <div>
-          <div class="footer-logo">CnC.</div>
+          <a class="navbar-brand d-flex align-items-center gap-2" href="{% url 'home' %}">
+            <img src="{% static 'images/logo.png' %}" alt="CnC Supermarket" height="38" class="d-inline-block align-text-top">
+          </a>
+          <br>
           <p class="footer-desc">Your neighbourhood supermarket, now online. Fresh groceries delivered instantly or on your schedule.</p>
           <div class="legal-line">FSSAI LIC. NO. 10023XXXXXXXXX</div>
           <div class="legal-line">GSTIN: 27XXXXX0000X1ZX</div>
@@ -560,60 +656,80 @@
         </div>
       </div>
       <div class="footer-bottom">
-        <span>© 2026 CnC Supermarket. All rights reserved.</span>
+        <span>© 2026 Cash And Carry Supermarket. All rights reserved.</span>
         <span>Registered office — Mumbai, Maharashtra, India</span>
       </div>
     </div>
   </footer>
 
-</body>
-</html>
-
-
-
-
 <script>
-  // Helper to get CSRF token
-  function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-      const cookies = document.cookie.split(';');
-      for (let i = 0; i < cookies.length; i++) {
-        const cookie = cookies[i].trim();
-        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-          break;
+function getCsrfToken() {
+  const csrfInput = document.querySelector('input[name="csrfmiddlewaretoken"]');
+  if (csrfInput && csrfInput.value) {
+    return csrfInput.value;
+  }
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.startsWith('csrftoken=')) {
+        return decodeURIComponent(cookie.substring('csrftoken='.length));
+      }
+    }
+  }
+  return '';
+}
+
+function updateCartWidget(productId, action) {
+  fetch("{% url 'update_cart_quantity' %}", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRFToken": getCsrfToken()
+    },
+    body: JSON.stringify({ product_id: productId, action: action })
+  })
+  .then(res => {
+    if (!res.ok) {
+      throw new Error(`Server status ${res.status}`);
+    }
+    return res.json();
+  })
+  .then(data => {
+    if (data.status === "success") {
+      // 1. Update Navbar Cart Count Badge
+      const badge = document.getElementById("cart-count");
+      if (badge) {
+        badge.innerText = data.cart_count;
+        badge.style.display = "flex";
+      }
+
+      // 2. Update Specific Product Card Widget DOM State
+      const widget = document.getElementById(`cart-widget-${productId}`);
+      if (widget) {
+        const itemQty = data.product_qty || 0;
+        if (itemQty > 0) {
+          widget.innerHTML = `
+            <div class="qty-btn-group">
+              <button type="button" class="qty-btn" onclick="updateCartWidget(${productId}, 'decrease')">-</button>
+              <span class="qty-val">${itemQty}</span>
+              <button type="button" class="qty-btn" onclick="updateCartWidget(${productId}, 'increase')">+</button>
+            </div>
+          `;
+        } else {
+          widget.innerHTML = `
+            <button type="button" class="btn-zepto-add" onclick="updateCartWidget(${productId}, 'increase')">ADD</button>
+          `;
         }
       }
     }
-    return cookieValue;
-  }
-
-  // Add product to cart via AJAX
-  function addToCart(productId) {
-    fetch("{% url 'add_to_cart' %}", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRFToken": getCookie("csrftoken")
-      },
-      body: JSON.stringify({ product_id: productId, quantity: 1 })
-    })
-    .then(response => response.json())
-    .then(data => {
-      if (data.status === 'success') {
-        // Update header badge
-        document.querySelectorAll('.cart-count').forEach(el => {
-          el.innerText = data.cart_count;
-        });
-      }
-    });
-  }
+  })
+  .catch(err => console.error("Widget Update Error:", err));
+}
 </script>
 
-
-
-
+</body>
+</html>
 
 
 
