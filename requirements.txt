@@ -7,3 +7,4 @@ asgiref
 sqlparse
 pandas
 openpyxl
+requests
