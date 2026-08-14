@@ -1,2 +1,5 @@
 Django>=5.0
-whitenoise>=6.6.0
+whitenoise
+dj-database-url
+psycopg2-binary
+Pillow
