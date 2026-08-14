@@ -2,16 +2,15 @@ import os
 import sys
 from pathlib import Path
 
-# Add project root to sys.path
+# Add project root to sys.path so Django can locate apps and config
 BASE_DIR = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(BASE_DIR))
+if str(BASE_DIR) not in sys.path:
+    sys.path.insert(0, str(BASE_DIR))
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 
-try:
-    from django.core.wsgi import get_wsgi_application
-    app = get_wsgi_application()
-except Exception as e:
-    import traceback
-    print("DJANGO INIT ERROR:", traceback.format_exc())
-    raise e
+from django.core.wsgi import get_wsgi_application
+
+# Vercel looks for 'app' or 'application' as the entrypoint callable
+application = get_wsgi_application()
+app = application
