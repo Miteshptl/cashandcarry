@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Category — CnC{% endblock %}
+
+{% block content %}
+<section class="section" style="padding: 24px 0 60px; min-height: 70vh;">
+  <div class="wrap" style="max-width: 540px; margin: 0 auto;">
+    
+    <div style="margin-bottom: 20px;">
+      <a href="{% url 'manage_categories' %}" style="font-size: 12px; color: var(--leaf); font-weight: 600; text-decoration: none;">← Back to Categories</a>
+      <h1 class="display" style="font-size: 22px; font-weight: 700; margin: 6px 0 0 0;">Edit Category: {{ category.name }}</h1>
+    </div>
+
+    <div style="background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 24px;">
+      <form method="POST" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 16px;">
+        {% csrf_token %}
+
+        <div>
+          <label style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--charcoal-soft); display: block; margin-bottom: 6px;">Category Name *</label>
+          <input type="text" name="name" value="{{ category.name }}" required class="input" style="width: 100%;">
+        </div>
+
+        {% if category.image %}
+          <div>
+            <span style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--charcoal-soft); display: block; margin-bottom: 6px;">Current Image</span>
+            <img src="{{ category.image.url }}" alt="{{ category.name }}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid var(--line);">
+          </div>
+        {% endif %}
+
+        <div>
+          <label style="font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--charcoal-soft); display: block; margin-bottom: 6px;">Update Image File</label>
+          <input type="file" name="image" accept="image/*" class="input" style="width: 100%;">
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 8px;">
+          <a href="{% url 'manage_categories' %}" class="btn btn-secondary" style="flex: 1; text-align: center;">Cancel</a>
+          <button type="submit" class="btn btn-primary" style="flex: 2;">Save Changes</button>
+        </div>
+      </form>
+    </div>
+
+  </div>
+</section>
+{% endblock %}

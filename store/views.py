@@ -12,6 +12,13 @@ from django.contrib.auth.views import LoginView
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.views.decorators.http import require_POST
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import user_passes_test
+from .models import Category
+import json
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import user_passes_test
+from .models import Product, Order, Category, Inventory
 
 from .forms import RegisterForm
 from .models import (
@@ -228,11 +235,6 @@ def home(request):
         'cart_quantities_json': json.dumps(cart_quantities)
     })
 
-
-def category_list(request):
-    """View all product categories."""
-    categories = Category.objects.filter(parent_category__isnull=True)
-    return render(request, 'category.html', {'categories': categories})
 
 
 def product_list(request):
@@ -712,40 +714,135 @@ def order_success(request, order_id):
 # In store/views.py
 # In store/views.py
 
+def is_staff_check(user):
+    return user.is_authenticated and (user.is_staff or user.is_superuser)
 
-@login_required
+@user_passes_test(is_staff_check, login_url='/accounts/login/')
 def dashboard(request):
-    """Main operations overview for store managers and staff."""
-    user = request.user
-    user_role = getattr(user, 'role', 'customer')
-    
-    if user_role == 'customer' and not (user.is_staff or user.is_superuser):
-        messages.warning(request, "Access restricted to staff members.")
-        return redirect('profile')
-
-    # Status counts for dashboard
+    # 1. Order Status Counts
     pending_orders_count = Order.objects.filter(order_status='pending_acceptance').count()
-    active_orders_count = Order.objects.filter(order_status__in=['accepted', 'packing', 'out_for_delivery']).count()
-    completed_orders_count = Order.objects.filter(order_status='delivered').count()
-    low_stock_items = Inventory.objects.select_related('product').filter(available_quantity__lt=10)
+    active_orders_count = Order.objects.filter(
+        order_status__in=['accepted', 'packing', 'out_for_delivery']
+    ).count()
     
-    # 👈 Count pending customer refund claims
-    pending_refunds_count = RefundRequest.objects.filter(status='pending').count()
+    # Check refund claim count safely if model exists, otherwise 0
+    pending_refunds_count = 0
+    try:
+        from .models import Refund
+        pending_refunds_count = Refund.objects.filter(status='pending').count()
+    except Exception:
+        pass
 
-    # Latest incoming orders queue
-    recent_orders = Order.objects.select_related('user', 'address').prefetch_related('items__product').order_by('-created_at')[:15]
+    # 2. Inventory / Low Stock calculations
+    try:
+        low_stock_count = Product.objects.filter(inventory__quantity__lt=10).count()
+        low_stock_items = Product.objects.filter(inventory__quantity__lt=10).select_related('inventory')[:6]
+    except Exception:
+        low_stock_count = 0
+        low_stock_items = []
+
+    # 3. Recent Orders
+    recent_orders = Order.objects.select_related('user', 'address').prefetch_related('items').order_by('-id')[:10]
 
     context = {
         'pending_orders_count': pending_orders_count,
         'active_orders_count': active_orders_count,
-        'completed_orders_count': completed_orders_count,
-        'low_stock_count': low_stock_items.count(),
-        'low_stock_items': low_stock_items[:5],
         'pending_refunds_count': pending_refunds_count,
+        'low_stock_count': low_stock_count,
         'recent_orders': recent_orders,
+        'low_stock_items': low_stock_items,
     }
     return render(request, 'dashboard.html', context)
 
+def is_staff_check(user):
+    """Checks if the user is authenticated and is a staff member or superuser."""
+    return user.is_authenticated and (user.is_staff or user.is_superuser)
+
+
+# 1. Customer-Facing Category Views (Resolves NoReverseMatch on homepage)
+def category_list(request):
+    categories = Category.objects.all().order_by('name')
+    return render(request, 'category_list.html', {'categories': categories})
+
+
+def category_detail(request, category_id):
+    category = get_object_or_404(Category, id=category_id)
+    # Filter products belonging to this category
+    products = Product.objects.filter(category=category)
+    return render(request, 'category_detail.html', {
+        'category': category,
+        'products': products
+    })
+
+
+# 2. Staff Management Category Views (Resolves AttributeError in urls.py)
+@user_passes_test(is_staff_check, login_url='/accounts/login/')
+def manage_categories(request):
+    categories = Category.objects.all().order_by('name')
+    return render(request, 'manage_categories.html', {'categories': categories})
+
+
+@user_passes_test(is_staff_check, login_url='/accounts/login/')
+def add_category(request):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        parent_id = request.POST.get('parent_category')
+        image = request.FILES.get('image')
+        image_url = request.POST.get('image_url')
+
+        if name:
+            parent = None
+            if parent_id:
+                try:
+                    parent = Category.objects.get(id=parent_id)
+                except Category.DoesNotExist:
+                    parent = None
+
+            category = Category(
+                name=name,
+                parent_category=parent if hasattr(Category, 'parent_category') else None
+            )
+
+            if image:
+                category.image = image
+            if image_url and hasattr(category, 'image_url'):
+                category.image_url = image_url
+
+            category.save()
+            return redirect('manage_categories')
+
+    categories = Category.objects.all().order_by('name')
+    return render(request, 'add_category.html', {'categories': categories})
+
+
+@user_passes_test(is_staff_check, login_url='/accounts/login/')
+def edit_category(request, category_id):
+    category = get_object_or_404(Category, id=category_id)
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        image = request.FILES.get('image')
+        image_url = request.POST.get('image_url')
+
+        if name:
+            category.name = name
+            if image:
+                category.image = image
+            if image_url and hasattr(category, 'image_url'):
+                category.image_url = image_url
+            category.save()
+            return redirect('manage_categories')
+
+    return render(request, 'edit_category.html', {'category': category})
+
+
+@user_passes_test(is_staff_check, login_url='/accounts/login/')
+def delete_category(request, category_id):
+    category = get_object_or_404(Category, id=category_id)
+    if request.method == 'POST':
+        category.delete()
+    return redirect('manage_categories')
+
+    
 @login_required
 def live_orders(request):
     """Dedicated live order management screen with quick status transitions."""

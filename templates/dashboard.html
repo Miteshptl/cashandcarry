@@ -55,6 +55,11 @@
   }
   @media (min-width: 992px) {
     .mgmt-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+  @media (min-width: 1200px) {
+    .mgmt-grid {
       grid-template-columns: repeat(4, 1fr);
     }
   }
@@ -171,7 +176,7 @@
 <section class="section" style="padding: 24px 0 60px; min-height: 80vh;">
   <div class="wrap">
 
-    <!-- Top Header & Quick Buttons -->
+    <!-- Top Header & Quick Action Buttons -->
     <div class="dash-header">
       <div>
         <span class="mono" style="font-size: 11px; color: var(--turmeric-dark); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;">Store Operations</span>
@@ -179,11 +184,14 @@
       </div>
 
       <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-        <a href="{% url 'item_picking' %}" class="btn btn-secondary" style="font-size: 12px; padding: 7px 12px; min-height: 38px;">
-          📋 Floor Picking
+        <a href="{% url 'add_category' %}" class="btn btn-secondary" style="font-size: 12px; padding: 7px 12px; min-height: 38px;">
+          📁 Add Category
         </a>
         <a href="{% url 'add_product' %}" class="btn btn-secondary" style="font-size: 12px; padding: 7px 12px; min-height: 38px;">
           ➕ Add Product
+        </a>
+        <a href="{% url 'item_picking' %}" class="btn btn-secondary" style="font-size: 12px; padding: 7px 12px; min-height: 38px;">
+          📋 Floor Picking
         </a>
         <a href="{% url 'live_orders' %}" class="btn btn-primary" style="font-size: 12px; padding: 7px 14px; min-height: 38px;">
           ⚡ Live Orders
@@ -220,7 +228,33 @@
       
       <div class="mgmt-grid">
 
-        <!-- 1. Manage Inventory -->
+        <!-- 1. Manage Categories -->
+        <a href="{% url 'manage_categories' %}" class="mgmt-card">
+          <div>
+            <div class="mgmt-card-icon">📁</div>
+            <div class="mgmt-card-title">Manage Categories</div>
+            <div class="mgmt-card-desc">Create, rename, or update category images and display arrangements.</div>
+          </div>
+          <div class="mgmt-card-action">
+            <span>Open Categories</span>
+            <span>→</span>
+          </div>
+        </a>
+
+        <!-- 2. Add Category -->
+        <a href="{% url 'add_category' %}" class="mgmt-card">
+          <div>
+            <div class="mgmt-card-icon">🗂️</div>
+            <div class="mgmt-card-title">Add Category</div>
+            <div class="mgmt-card-desc">Add a new grocery aisle or product group with custom banner images.</div>
+          </div>
+          <div class="mgmt-card-action">
+            <span>Add Category</span>
+            <span>→</span>
+          </div>
+        </a>
+
+        <!-- 3. Manage Inventory -->
         <a href="{% url 'manage_inventory' %}" class="mgmt-card">
           <div>
             <div class="mgmt-card-icon">📦</div>
@@ -233,7 +267,20 @@
           </div>
         </a>
 
-        <!-- 2. Manage Pricing -->
+        <!-- 4. Add Product -->
+        <a href="{% url 'add_product' %}" class="mgmt-card">
+          <div>
+            <div class="mgmt-card-icon">➕</div>
+            <div class="mgmt-card-title">Add Product</div>
+            <div class="mgmt-card-desc">Add a single new grocery item listing, images, and prices.</div>
+          </div>
+          <div class="mgmt-card-action">
+            <span>Add Listing</span>
+            <span>→</span>
+          </div>
+        </a>
+
+        <!-- 5. Manage Pricing -->
         <a href="{% url 'manage_prices' %}" class="mgmt-card">
           <div>
             <div class="mgmt-card-icon">🏷️</div>
@@ -246,7 +293,7 @@
           </div>
         </a>
 
-        <!-- 3. Manage Coupons -->
+        <!-- 6. Manage Coupons -->
         <a href="{% url 'manage_coupons' %}" class="mgmt-card">
           <div>
             <div class="mgmt-card-icon">🎟️</div>
@@ -259,7 +306,7 @@
           </div>
         </a>
 
-        <!-- 4. Manage Staff -->
+        <!-- 7. Manage Staff -->
         <a href="{% url 'manage_staff' %}" class="mgmt-card">
           <div>
             <div class="mgmt-card-icon">👥</div>
@@ -272,7 +319,7 @@
           </div>
         </a>
 
-        <!-- 5. Floor Picking & Substitutions -->
+        <!-- 8. Floor Picking & Substitutions -->
         <a href="{% url 'item_picking' %}" class="mgmt-card">
           <div>
             <div class="mgmt-card-icon">📋</div>
@@ -285,7 +332,7 @@
           </div>
         </a>
 
-        <!-- 6. Manage Refunds & Claims -->
+        <!-- 9. Manage Refunds & Claims -->
         <a href="{% url 'manage_refunds' %}" class="mgmt-card">
           <div>
             <div class="mgmt-card-icon">🔄</div>
@@ -298,7 +345,7 @@
           </div>
         </a>
 
-        <!-- 7. Live Orders Queue -->
+        <!-- 10. Live Orders Queue -->
         <a href="{% url 'live_orders' %}" class="mgmt-card">
           <div>
             <div class="mgmt-card-icon">⚡</div>
@@ -307,19 +354,6 @@
           </div>
           <div class="mgmt-card-action">
             <span>Open Orders Queue</span>
-            <span>→</span>
-          </div>
-        </a>
-
-        <!-- 8. Add Product -->
-        <a href="{% url 'add_product' %}" class="mgmt-card">
-          <div>
-            <div class="mgmt-card-icon">➕</div>
-            <div class="mgmt-card-title">Add Product</div>
-            <div class="mgmt-card-desc">Add a single new grocery item listing, images, and prices.</div>
-          </div>
-          <div class="mgmt-card-action">
-            <span>Add Listing</span>
             <span>→</span>
           </div>
         </a>
