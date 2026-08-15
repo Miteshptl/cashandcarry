@@ -24,7 +24,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'cloudinary_storage',          # Must be before staticfiles
+    'cloudinary_storage',          # Must be declared before staticfiles
     'django.contrib.staticfiles',
     'cloudinary',
     'store',
@@ -109,8 +109,8 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
 
-# Backward-compatibility alias required by django-cloudinary-storage collectstatic
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# Backward compatibility alias required by django-cloudinary-storage collectstatic
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 # Cloudinary Configuration
@@ -126,7 +126,7 @@ STORAGES = {
         "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
     },
     "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
     },
 }
 
