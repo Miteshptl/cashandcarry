@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}All Categories — CnC Supermarket{% endblock %}
+
+{% block content %}
+<section class="section" style="padding: 24px 0 60px; min-height: 80vh;">
+  <div class="wrap">
+
+    <!-- Header & Breadcrumb -->
+    <div style="margin-bottom: 24px;">
+      <a href="{% url 'home' %}" style="font-size: 12px; color: var(--leaf); font-weight: 600; text-decoration: none;">← Back to Home</a>
+      <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: 8px; flex-wrap: wrap; gap: 12px;">
+        <div>
+          <span class="mono" style="font-size: 11px; color: var(--turmeric-dark); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Departments</span>
+          <h1 class="display" style="font-size: 28px; margin: 4px 0 0;">All Categories</h1>
+        </div>
+        <span style="font-size: 13px; color: var(--charcoal-soft);">{{ categories.count }} department(s)</span>
+      </div>
+    </div>
+
+    <!-- Category Cards Grid -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px;">
+      {% for category in categories %}
+        <a href="{% url 'category_detail' category.id %}" style="text-decoration: none; color: var(--charcoal);">
+          <div style="background: var(--white); border: 1px solid var(--line); border-radius: 14px; padding: 16px; text-align: center; transition: transform 0.15s ease, border-color 0.15s ease;"
+               onmouseover="this.style.transform='translateY(-3px)'; this.style.borderColor='var(--leaf)';"
+               onmouseout="this.style.transform='none'; this.style.borderColor='var(--line)';">
+            
+            {% if category.image %}
+              <img src="{{ category.image.url }}" alt="{{ category.name }}" style="width: 100%; height: 120px; object-fit: contain; margin-bottom: 12px; border-radius: 8px;">
+            {% elif category.image_url %}
+              <img src="{{ category.image_url }}" alt="{{ category.name }}" style="width: 100%; height: 120px; object-fit: contain; margin-bottom: 12px; border-radius: 8px;">
+            {% else %}
+              <div style="width: 100%; height: 120px; background: var(--mist); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 36px; margin-bottom: 12px;">🗂️</div>
+            {% endif %}
+
+            <h3 style="font-size: 15px; font-weight: 700; margin: 0 0 6px; color: var(--charcoal);">{{ category.name }}</h3>
+            <span style="font-size: 12px; color: var(--leaf); font-weight: 600;">Browse Department →</span>
+          </div>
+        </a>
+      {% empty %}
+        <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; background: var(--white); border: 1px solid var(--line); border-radius: 16px;">
+          <div style="font-size: 40px; margin-bottom: 12px;">🗂️</div>
+          <h2 style="font-size: 18px; margin-bottom: 6px;">No categories available yet</h2>
+          <p style="color: var(--charcoal-soft); font-size: 13px; margin-bottom: 16px;">Categories added by the store manager will appear here.</p>
+          <a href="{% url 'home' %}" class="btn btn-secondary">Back to Store</a>
+        </div>
+      {% endfor %}
+    </div>
+
+  </div>
+</section>
+{% endblock %}
