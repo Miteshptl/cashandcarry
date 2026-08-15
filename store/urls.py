@@ -92,5 +92,4 @@ urlpatterns = [
     path('manage/staff/', views.manage_staff, name='manage_staff'),
     path('manage/store-settings/', views.store_settings, name='store_settings'),
     path('manage/audit-logs/', views.audit_logs, name='audit_logs'),
-
 ]
