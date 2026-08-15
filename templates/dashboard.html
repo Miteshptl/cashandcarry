@@ -184,6 +184,9 @@
       </div>
 
       <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <a href="{% url 'bulk_import' %}" class="btn btn-secondary" style="font-size: 12px; padding: 7px 12px; min-height: 38px;">
+          📊 Bulk Import
+        </a>
         <a href="{% url 'add_category' %}" class="btn btn-secondary" style="font-size: 12px; padding: 7px 12px; min-height: 38px;">
           📁 Add Category
         </a>
@@ -228,7 +231,46 @@
       
       <div class="mgmt-grid">
 
-        <!-- 1. Manage Categories -->
+        <!-- 1. Bulk Import Products -->
+        <a href="{% url 'bulk_import' %}" class="mgmt-card">
+          <div>
+            <div class="mgmt-card-icon">📊</div>
+            <div class="mgmt-card-title">Bulk Import Products</div>
+            <div class="mgmt-card-desc">Upload CSV/Excel spreadsheets to mass insert or update catalog items and stock.</div>
+          </div>
+          <div class="mgmt-card-action">
+            <span>Open Bulk Import</span>
+            <span>→</span>
+          </div>
+        </a>
+
+        <!-- 2. Add Product -->
+        <a href="{% url 'add_product' %}" class="mgmt-card">
+          <div>
+            <div class="mgmt-card-icon">➕</div>
+            <div class="mgmt-card-title">Add Product</div>
+            <div class="mgmt-card-desc">Add a single new grocery item listing, product images, units, and base prices.</div>
+          </div>
+          <div class="mgmt-card-action">
+            <span>Add Listing</span>
+            <span>→</span>
+          </div>
+        </a>
+
+        <!-- 3. Manage Inventory -->
+        <a href="{% url 'manage_inventory' %}" class="mgmt-card">
+          <div>
+            <div class="mgmt-card-icon">📦</div>
+            <div class="mgmt-card-title">Manage Inventory</div>
+            <div class="mgmt-card-desc">Update stock counts, view low-stock alerts, and track available unit quantities.</div>
+          </div>
+          <div class="mgmt-card-action">
+            <span>Open Inventory</span>
+            <span>→</span>
+          </div>
+        </a>
+
+        <!-- 4. Manage Categories -->
         <a href="{% url 'manage_categories' %}" class="mgmt-card">
           <div>
             <div class="mgmt-card-icon">📁</div>
@@ -241,7 +283,7 @@
           </div>
         </a>
 
-        <!-- 2. Add Category -->
+        <!-- 5. Add Category -->
         <a href="{% url 'add_category' %}" class="mgmt-card">
           <div>
             <div class="mgmt-card-icon">🗂️</div>
@@ -254,33 +296,7 @@
           </div>
         </a>
 
-        <!-- 3. Manage Inventory -->
-        <a href="{% url 'manage_inventory' %}" class="mgmt-card">
-          <div>
-            <div class="mgmt-card-icon">📦</div>
-            <div class="mgmt-card-title">Manage Inventory</div>
-            <div class="mgmt-card-desc">Update stock counts, view low-stock alerts, and track available quantity.</div>
-          </div>
-          <div class="mgmt-card-action">
-            <span>Open Inventory</span>
-            <span>→</span>
-          </div>
-        </a>
-
-        <!-- 4. Add Product -->
-        <a href="{% url 'add_product' %}" class="mgmt-card">
-          <div>
-            <div class="mgmt-card-icon">➕</div>
-            <div class="mgmt-card-title">Add Product</div>
-            <div class="mgmt-card-desc">Add a single new grocery item listing, images, and prices.</div>
-          </div>
-          <div class="mgmt-card-action">
-            <span>Add Listing</span>
-            <span>→</span>
-          </div>
-        </a>
-
-        <!-- 5. Manage Pricing -->
+        <!-- 6. Manage Pricing -->
         <a href="{% url 'manage_prices' %}" class="mgmt-card">
           <div>
             <div class="mgmt-card-icon">🏷️</div>
@@ -293,7 +309,7 @@
           </div>
         </a>
 
-        <!-- 6. Manage Coupons -->
+        <!-- 7. Manage Coupons -->
         <a href="{% url 'manage_coupons' %}" class="mgmt-card">
           <div>
             <div class="mgmt-card-icon">🎟️</div>
@@ -306,7 +322,7 @@
           </div>
         </a>
 
-        <!-- 7. Manage Staff -->
+        <!-- 8. Manage Staff -->
         <a href="{% url 'manage_staff' %}" class="mgmt-card">
           <div>
             <div class="mgmt-card-icon">👥</div>
@@ -319,7 +335,7 @@
           </div>
         </a>
 
-        <!-- 8. Floor Picking & Substitutions -->
+        <!-- 9. Floor Picking & Substitutions -->
         <a href="{% url 'item_picking' %}" class="mgmt-card">
           <div>
             <div class="mgmt-card-icon">📋</div>
@@ -332,7 +348,7 @@
           </div>
         </a>
 
-        <!-- 9. Manage Refunds & Claims -->
+        <!-- 10. Manage Refunds & Claims -->
         <a href="{% url 'manage_refunds' %}" class="mgmt-card">
           <div>
             <div class="mgmt-card-icon">🔄</div>
@@ -345,7 +361,7 @@
           </div>
         </a>
 
-        <!-- 10. Live Orders Queue -->
+        <!-- 11. Live Orders Queue -->
         <a href="{% url 'live_orders' %}" class="mgmt-card">
           <div>
             <div class="mgmt-card-icon">⚡</div>
