@@ -154,3 +154,21 @@ CSRF_TRUSTED_ORIGINS = [
     'http://127.0.0.1',
     'http://localhost',
 ]
+
+
+# -------------------------------------------------------------
+# Vercel Proxy & Session Cookie Configuration (Fixes Login Loop)
+# -------------------------------------------------------------
+# Tell Django it is behind Vercel's HTTPS reverse proxy
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Session & CSRF Cookie Settings
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_AGE = 86400 * 14  # 14 days
+SESSION_SAVE_EVERY_REQUEST = True
+
+# Ensure session engine uses the database (Neon PostgreSQL)
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'

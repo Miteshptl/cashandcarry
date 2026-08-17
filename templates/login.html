@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Sign In — CnC{% endblock %}
+{% block title %}Create Account — CnC{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -14,7 +14,7 @@
     box-shadow: 0 4px 20px rgba(0,0,0,0.04);
   }
   .form-group {
-    margin-bottom: 18px;
+    margin-bottom: 16px;
   }
   .form-group label {
     display: block;
@@ -42,8 +42,8 @@
 <div class="wrap">
   <div class="auth-card">
     <div style="text-align: center; margin-bottom: 24px;">
-      <h1 style="font-size: 24px; font-weight: 700; margin: 0 0 6px 0;">Welcome Back</h1>
-      <p style="font-size: 13px; color: var(--charcoal-soft, #64748b); margin: 0;">Sign in to your account</p>
+      <h1 style="font-size: 24px; font-weight: 700; margin: 0 0 6px 0;">Create Account</h1>
+      <p style="font-size: 13px; color: var(--charcoal-soft, #64748b); margin: 0;">Register for instant grocery orders</p>
     </div>
 
     {% if messages %}
@@ -56,13 +56,17 @@
       {% endfor %}
     {% endif %}
 
-    <form method="POST" action="{% url 'login' %}">
+    <form method="POST" action="{% url 'register' %}">
       {% csrf_token %}
-      <input type="hidden" name="next" value="{{ next|default:'' }}">
 
       <div class="form-group">
-        <label for="username">Phone Number / Username</label>
-        <input type="text" id="username" name="username" class="form-control" placeholder="Enter username or mobile" required autofocus>
+        <label for="name">Full Name</label>
+        <input type="text" id="name" name="name" class="form-control" placeholder="Your Name" required>
+      </div>
+
+      <div class="form-group">
+        <label for="phone">Phone Number / Username</label>
+        <input type="text" id="phone" name="phone" class="form-control" placeholder="10-digit mobile number" required>
       </div>
 
       <div class="form-group">
@@ -71,12 +75,12 @@
       </div>
 
       <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; font-weight: 700; border-radius: 8px; margin-top: 8px;">
-        Sign In
+        Register
       </button>
     </form>
 
     <div style="text-align: center; margin-top: 20px; font-size: 13px; color: var(--charcoal-soft, #64748b);">
-      Don't have an account? <a href="{% url 'register' %}" style="color: var(--leaf, #2f6b4f); font-weight: 600;">Create Account</a>
+      Already have an account? <a href="{% url 'login' %}" style="color: var(--leaf, #2f6b4f); font-weight: 600;">Sign In</a>
     </div>
   </div>
 </div>
