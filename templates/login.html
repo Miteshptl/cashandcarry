@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign In — CnC{% endblock %}
+
+{% block extra_css %}
+<style>
+  .auth-card {
+    max-width: 420px;
+    margin: 40px auto;
+    background: var(--white, #ffffff);
+    border: 1px solid var(--line, #e2e8f0);
+    border-radius: 16px;
+    padding: 32px 24px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+  }
+  .form-group {
+    margin-bottom: 18px;
+  }
+  .form-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--charcoal, #1e293b);
+  }
+  .form-control {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--line, #cbd5e1);
+    border-radius: 8px;
+    font-size: 14px;
+    box-sizing: border-box;
+  }
+  .form-control:focus {
+    outline: none;
+    border-color: var(--leaf, #2f6b4f);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="wrap">
+  <div class="auth-card">
+    <div style="text-align: center; margin-bottom: 24px;">
+      <h1 style="font-size: 24px; font-weight: 700; margin: 0 0 6px 0;">Welcome Back</h1>
+      <p style="font-size: 13px; color: var(--charcoal-soft, #64748b); margin: 0;">Sign in to your account</p>
+    </div>
+
+    {% if messages %}
+      {% for message in messages %}
+        <div style="padding: 10px 14px; border-radius: 8px; margin-bottom: 16px; font-size: 13px;
+          {% if message.tags == 'error' %}background: #fee2e2; color: #991b1b;
+          {% else %}background: #dcfce7; color: #166534;{% endif %}">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    <form method="POST" action="{% url 'login' %}">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ next|default:'' }}">
+
+      <div class="form-group">
+        <label for="username">Phone Number / Username</label>
+        <input type="text" id="username" name="username" class="form-control" placeholder="Enter username or mobile" required autofocus>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" class="form-control" placeholder="••••••••" required>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; font-weight: 700; border-radius: 8px; margin-top: 8px;">
+        Sign In
+      </button>
+    </form>
+
+    <div style="text-align: center; margin-top: 20px; font-size: 13px; color: var(--charcoal-soft, #64748b);">
+      Don't have an account? <a href="{% url 'register' %}" style="color: var(--leaf, #2f6b4f); font-weight: 600;">Create Account</a>
+    </div>
+  </div>
+</div>
+{% endblock %}
