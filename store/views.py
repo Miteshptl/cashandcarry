@@ -150,44 +150,31 @@ from django.db.models import Q
 User = get_user_model()
 
 def login_view(request):
-    """Sign-in supporting 10-digit Mobile Phone, Username, or Email."""
     if request.user.is_authenticated:
-        return redirect('home')
+        if request.user.is_staff or request.user.is_superuser:
+            return redirect('dashboard')
+        return redirect('profile')
 
-    next_url = request.GET.get('next', request.POST.get('next', 'home'))
+    next_url = request.GET.get('next') or request.POST.get('next') or ''
 
     if request.method == 'POST':
-        identifier = request.POST.get('username', '').strip()
+        username = request.POST.get('username', '').strip()
         password = request.POST.get('password', '').strip()
 
-        if not identifier or not password:
-            messages.error(request, "Please enter your mobile number/email and password.")
-            return render(request, 'login.html', {'next': next_url, 'identifier': identifier})
-
-        # Match by phone, username, or email
-        user_query = Q(username__iexact=identifier)
-        if hasattr(User, 'phone'):
-            user_query |= Q(phone=identifier)
-        if '@' in identifier:
-            user_query |= Q(email__iexact=identifier)
-
-        user_obj = User.objects.filter(user_query).first()
-        username_to_auth = user_obj.username if user_obj else identifier
-
-        # Authenticate
-        user = authenticate(request, username=username_to_auth, password=password)
-
+        user = authenticate(request, username=username, password=password)
         if user is not None:
-            if user.is_active:
-                login(request, user)
-                messages.success(request, f"Welcome back, {user.first_name or user.username}!")
-                return redirect(next_url if next_url and next_url != 'home' else 'home')
-            else:
-                messages.error(request, "Your account is deactivated. Please contact support.")
+            login(request, user)
+            messages.success(request, f"Welcome back, {user.first_name or user.username}!")
+            if next_url and next_url != 'home':
+                return redirect(next_url)
+            if user.is_staff or user.is_superuser:
+                return redirect('dashboard')
+            return redirect('home')
         else:
-            messages.error(request, "Invalid mobile number, username, or password.")
+            messages.error(request, "Invalid username/phone number or password.")
 
-    return render(request, 'login.html', {'next': next_url})
+    return render(request, 'registration/login.html', {'next': next_url})
+
 
 # Define alias for any URL pattern using user_login
 user_login = login_view
@@ -842,7 +829,7 @@ def delete_category(request, category_id):
         category.delete()
     return redirect('manage_categories')
 
-    
+
 @login_required
 def live_orders(request):
     """Dedicated live order management screen with quick status transitions."""
