@@ -742,7 +742,7 @@ def manage_coupons(request):
 
 @user_passes_test(is_admin_or_manager, login_url='/accounts/login/')
 def bulk_import(request):
-    """Upload CSV or Excel files with auto-encoding detection to mass create/update products."""
+    """Upload CSV or Excel files with detailed per-row error tracking."""
     if request.method == 'POST':
         uploaded_file = request.FILES.get('file')
         file_url = request.POST.get('file_url')
@@ -759,6 +759,7 @@ def bulk_import(request):
 
         success = 0
         errors = 0
+        error_details = []
 
         try:
             # 1. Parse CSV / Excel safely with fallback encodings
@@ -766,7 +767,6 @@ def bulk_import(request):
                 file_name = uploaded_file.name.lower()
                 if file_name.endswith('.csv'):
                     file_bytes = uploaded_file.read()
-                    # Try common encodings used by Excel & Windows
                     df = None
                     for enc in ['utf-8-sig', 'utf-8', 'cp1252', 'latin1', 'iso-8859-1']:
                         try:
@@ -775,7 +775,7 @@ def bulk_import(request):
                         except (UnicodeDecodeError, UnicodeError):
                             continue
                     if df is None:
-                        raise ValueError("Could not decode CSV file. Please save as CSV (UTF-8).")
+                        raise ValueError("Could not decode CSV file. Please save as standard CSV (UTF-8).")
                 elif file_name.endswith(('.xlsx', '.xls')):
                     df = pd.read_excel(uploaded_file)
                 else:
@@ -796,31 +796,56 @@ def bulk_import(request):
                 else:
                     df = pd.read_excel(io.BytesIO(resp.content))
 
-            # 2. Normalize column headers
+            # 2. Normalize and check headers
             df.columns = df.columns.astype(str).str.strip().str.lower()
             job.total_rows = len(df)
+            found_columns = list(df.columns)
 
-            # 3. Process rows
-            for _, row in df.iterrows():
+            # 3. Process rows with row-by-row diagnosis
+            for idx, row in df.iterrows():
+                row_num = idx + 2  # Accounting for 1-based index and header row
+
                 try:
                     category_name = str(row.get('category_name') or row.get('category') or '').strip()
-                    product_name = str(row.get('product_name') or row.get('name') or '').strip()
+                    product_name = str(row.get('product_name') or row.get('name') or row.get('title') or '').strip()
 
-                    if not category_name or not product_name:
+                    if not category_name and not product_name:
                         errors += 1
+                        error_details.append(f"Row {row_num}: Missing both Category and Product Name. Found columns: {found_columns}")
+                        continue
+                    if not category_name:
+                        errors += 1
+                        error_details.append(f"Row {row_num} ('{product_name}'): Missing category name.")
+                        continue
+                    if not product_name:
+                        errors += 1
+                        error_details.append(f"Row {row_num}: Missing product name.")
                         continue
 
                     category, _ = Category.objects.get_or_create(name=category_name)
 
-                    # Safe numeric conversions
+                    # Price parsing (clean ₹, commas, and spaces)
                     price_raw = row.get('price', 0)
-                    price = float(price_raw) if pd.notna(price_raw) and str(price_raw).strip() != '' else 0.0
+                    if pd.isna(price_raw) or str(price_raw).strip() == '':
+                        price = 0.0
+                    else:
+                        cleaned_price = re.sub(r'[^\d.]', '', str(price_raw))
+                        price = float(cleaned_price) if cleaned_price else 0.0
 
+                    # Discounted price parsing
                     disc_raw = row.get('discounted_price')
-                    discounted_price = float(disc_raw) if pd.notna(disc_raw) and str(disc_raw).strip() != '' else None
+                    discounted_price = None
+                    if pd.notna(disc_raw) and str(disc_raw).strip() != '':
+                        cleaned_disc = re.sub(r'[^\d.]', '', str(disc_raw))
+                        discounted_price = float(cleaned_disc) if cleaned_disc else None
 
+                    # Stock quantity parsing
                     stock_raw = row.get('available_quantity') or row.get('stock') or row.get('quantity')
-                    stock_qty = int(float(stock_raw)) if pd.notna(stock_raw) and str(stock_raw).strip() != '' else 0
+                    if pd.isna(stock_raw) or str(stock_raw).strip() == '':
+                        stock_qty = 0
+                    else:
+                        cleaned_stock = re.sub(r'[^\d]', '', str(stock_raw))
+                        stock_qty = int(cleaned_stock) if cleaned_stock else 0
 
                     product, _ = Product.objects.update_or_create(
                         name=product_name,
@@ -841,26 +866,34 @@ def bulk_import(request):
                     )
                     success += 1
 
-                except Exception:
+                except Exception as row_err:
                     errors += 1
+                    error_details.append(f"Row {row_num} ('{row.get('product_name') or 'Unknown'}'): {str(row_err)}")
 
             job.status = 'completed' if errors == 0 else ('failed' if success == 0 else 'completed')
             job.success_count = success
             job.error_count = errors
             job.save()
 
-            messages.success(request, f"Import complete! {success} products added/updated, {errors} errors.")
+            if success > 0:
+                messages.success(request, f"Import complete: {success} products added/updated successfully.")
+
+            if errors > 0:
+                # Show up to 4 concrete sample errors on screen
+                sample_errors = " | ".join(error_details[:4])
+                messages.error(request, f"{errors} rows failed. Samples: {sample_errors}")
 
         except Exception as e:
             job.status = 'failed'
             job.error_count = getattr(job, 'total_rows', 1)
             job.save()
-            messages.error(request, f"Failed to process file: {str(e)}")
+            messages.error(request, f"Failed to parse file: {str(e)}")
 
         return redirect('bulk_import')
 
     import_jobs = BulkImportJob.objects.all().order_by('-created_at')[:10]
     return render(request, 'bulk_import.html', {'import_jobs': import_jobs})
+
 
 @login_required
 def download_sample_import(request):
