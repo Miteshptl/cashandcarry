@@ -742,7 +742,7 @@ def manage_coupons(request):
 
 @user_passes_test(is_admin_or_manager, login_url='/accounts/login/')
 def bulk_import(request):
-    """Upload CSV or Excel files with detailed per-row error tracking."""
+    """Upload CSV or Excel files with duplicate category/product handling."""
     if request.method == 'POST':
         uploaded_file = request.FILES.get('file')
         file_url = request.POST.get('file_url')
@@ -762,7 +762,7 @@ def bulk_import(request):
         error_details = []
 
         try:
-            # 1. Parse CSV / Excel safely with fallback encodings
+            # 1. Parse CSV / Excel safely
             if uploaded_file:
                 file_name = uploaded_file.name.lower()
                 if file_name.endswith('.csv'):
@@ -775,7 +775,7 @@ def bulk_import(request):
                         except (UnicodeDecodeError, UnicodeError):
                             continue
                     if df is None:
-                        raise ValueError("Could not decode CSV file. Please save as standard CSV (UTF-8).")
+                        raise ValueError("Could not decode CSV file. Please save as CSV (UTF-8).")
                 elif file_name.endswith(('.xlsx', '.xls')):
                     df = pd.read_excel(uploaded_file)
                 else:
@@ -796,35 +796,29 @@ def bulk_import(request):
                 else:
                     df = pd.read_excel(io.BytesIO(resp.content))
 
-            # 2. Normalize and check headers
+            # 2. Clean column headers
             df.columns = df.columns.astype(str).str.strip().str.lower()
             job.total_rows = len(df)
-            found_columns = list(df.columns)
 
-            # 3. Process rows with row-by-row diagnosis
+            # 3. Process rows safely
             for idx, row in df.iterrows():
-                row_num = idx + 2  # Accounting for 1-based index and header row
+                row_num = idx + 2
 
                 try:
                     category_name = str(row.get('category_name') or row.get('category') or '').strip()
                     product_name = str(row.get('product_name') or row.get('name') or row.get('title') or '').strip()
 
-                    if not category_name and not product_name:
+                    if not category_name or not product_name:
                         errors += 1
-                        error_details.append(f"Row {row_num}: Missing both Category and Product Name. Found columns: {found_columns}")
-                        continue
-                    if not category_name:
-                        errors += 1
-                        error_details.append(f"Row {row_num} ('{product_name}'): Missing category name.")
-                        continue
-                    if not product_name:
-                        errors += 1
-                        error_details.append(f"Row {row_num}: Missing product name.")
+                        error_details.append(f"Row {row_num}: Missing category or product name.")
                         continue
 
-                    category, _ = Category.objects.get_or_create(name=category_name)
+                    # Safe Category lookup: gets the first matching category without throwing errors
+                    category = Category.objects.filter(name__iexact=category_name).first()
+                    if not category:
+                        category = Category.objects.create(name=category_name)
 
-                    # Price parsing (clean ₹, commas, and spaces)
+                    # Safe price parsing
                     price_raw = row.get('price', 0)
                     if pd.isna(price_raw) or str(price_raw).strip() == '':
                         price = 0.0
@@ -832,14 +826,14 @@ def bulk_import(request):
                         cleaned_price = re.sub(r'[^\d.]', '', str(price_raw))
                         price = float(cleaned_price) if cleaned_price else 0.0
 
-                    # Discounted price parsing
+                    # Safe discounted price parsing
                     disc_raw = row.get('discounted_price')
                     discounted_price = None
                     if pd.notna(disc_raw) and str(disc_raw).strip() != '':
                         cleaned_disc = re.sub(r'[^\d.]', '', str(disc_raw))
                         discounted_price = float(cleaned_disc) if cleaned_disc else None
 
-                    # Stock quantity parsing
+                    # Safe stock quantity parsing
                     stock_raw = row.get('available_quantity') or row.get('stock') or row.get('quantity')
                     if pd.isna(stock_raw) or str(stock_raw).strip() == '':
                         stock_qty = 0
@@ -847,23 +841,47 @@ def bulk_import(request):
                         cleaned_stock = re.sub(r'[^\d]', '', str(stock_raw))
                         stock_qty = int(cleaned_stock) if cleaned_stock else 0
 
-                    product, _ = Product.objects.update_or_create(
-                        name=product_name,
-                        defaults={
-                            'category': category,
-                            'brand': str(row.get('brand', '')).strip() if pd.notna(row.get('brand')) else '',
-                            'unit': str(row.get('unit', '1 unit')).strip() if pd.notna(row.get('unit')) else '1 unit',
-                            'price': price,
-                            'discounted_price': discounted_price,
-                            'image_url': str(row.get('image_url', '')).strip() if pd.notna(row.get('image_url')) else '',
-                            'description': str(row.get('description', '')).strip() if pd.notna(row.get('description')) else '',
-                        }
-                    )
+                    brand = str(row.get('brand', '')).strip() if pd.notna(row.get('brand')) else ''
+                    unit = str(row.get('unit', '1 unit')).strip() if pd.notna(row.get('unit')) else '1 unit'
+                    image_url = str(row.get('image_url', '')).strip() if pd.notna(row.get('image_url')) else ''
+                    description = str(row.get('description', '')).strip() if pd.notna(row.get('description')) else ''
 
-                    Inventory.objects.update_or_create(
-                        product=product,
-                        defaults={'available_quantity': stock_qty}
-                    )
+                    # Safe Product lookup
+                    product = Product.objects.filter(name__iexact=product_name).first()
+                    if product:
+                        product.category = category
+                        product.brand = brand
+                        product.unit = unit
+                        product.price = price
+                        product.discounted_price = discounted_price
+                        if image_url:
+                            product.image_url = image_url
+                        if description:
+                            product.description = description
+                        product.save()
+                    else:
+                        product = Product.objects.create(
+                            name=product_name,
+                            category=category,
+                            brand=brand,
+                            unit=unit,
+                            price=price,
+                            discounted_price=discounted_price,
+                            image_url=image_url,
+                            description=description
+                        )
+
+                    # Update Inventory
+                    inventory = Inventory.objects.filter(product=product).first()
+                    if inventory:
+                        inventory.available_quantity = stock_qty
+                        inventory.save()
+                    else:
+                        Inventory.objects.create(
+                            product=product,
+                            available_quantity=stock_qty
+                        )
+
                     success += 1
 
                 except Exception as row_err:
@@ -877,9 +895,7 @@ def bulk_import(request):
 
             if success > 0:
                 messages.success(request, f"Import complete: {success} products added/updated successfully.")
-
             if errors > 0:
-                # Show up to 4 concrete sample errors on screen
                 sample_errors = " | ".join(error_details[:4])
                 messages.error(request, f"{errors} rows failed. Samples: {sample_errors}")
 
@@ -893,6 +909,7 @@ def bulk_import(request):
 
     import_jobs = BulkImportJob.objects.all().order_by('-created_at')[:10]
     return render(request, 'bulk_import.html', {'import_jobs': import_jobs})
+
 
 
 @login_required
