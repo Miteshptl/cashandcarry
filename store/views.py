@@ -1,35 +1,44 @@
 import csv
 import io
 import json
-# import pandas as pd
+import re
 import requests
+import pandas as pd
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse
-from django.contrib.auth import login
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth import get_user_model, authenticate, login, logout
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.views import LoginView
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.views.decorators.http import require_POST
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import user_passes_test
-from .models import Category
-import json
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import user_passes_test
-from .models import Product, Order, Category, Inventory
 
-from .forms import RegisterForm
 from .models import (
     User, Address, Category, Product, Inventory, Coupon,
     Order, OrderItem, BulkImportJob, StoreSettings, AuditLog, RefundRequest
 )
 
+User = get_user_model()
+
 
 # ==========================================
-# AUTHENTICATION VIEWS
+# AUTHENTICATION & ACCESS CHECKS
 # ==========================================
+
+def is_staff_check(user):
+    """Checks if user is authenticated and is staff or has internal store role."""
+    return user.is_authenticated and (
+        user.is_staff or user.is_superuser or getattr(user, 'role', '') in ['admin', 'owner', 'manager', 'employee']
+    )
+
+
+def is_admin_or_manager(user):
+    """Checks if user has admin/manager privileges."""
+    return user.is_authenticated and (
+        user.is_superuser or user.is_staff or getattr(user, 'role', '') in ['admin', 'owner', 'manager']
+    )
+
 
 class CustomLoginView(LoginView):
     """Role-aware login view redirecting staff/admin to dashboard and customers to profile."""
@@ -37,25 +46,13 @@ class CustomLoginView(LoginView):
 
     def get_success_url(self):
         user = self.request.user
-        user_role = getattr(user, 'role', 'customer')
-        internal_roles = ['admin', 'owner', 'manager', 'employee']
-
-        if user.is_staff or user.is_superuser or user_role in internal_roles:
+        if is_staff_check(user):
             return '/dashboard/'
         return '/profile/'
 
-# In store/views.py
-import re
-import re
-from django.contrib.auth import get_user_model, authenticate, login, logout
-from django.contrib import messages
-from django.shortcuts import render, redirect
-from django.db.models import Q
-
-User = get_user_model()
 
 def register(request):
-    """Customer registration with strict 10-digit phone validation and duplicate handling."""
+    """Customer registration with 10-digit phone validation."""
     if request.user.is_authenticated:
         return redirect('home')
 
@@ -68,36 +65,24 @@ def register(request):
         password = request.POST.get('password', '')
         confirm_password = request.POST.get('confirm_password', '')
 
-        # 1. Strict 10-Digit Mobile Number Validation (Indian standard: starts with 6-9)
         if not re.match(r'^[6-9]\d{9}$', phone):
             messages.error(request, "Please enter a valid 10-digit mobile number starting with 6, 7, 8, or 9.")
             return render(request, 'register.html', {
-                'full_name': full_name,
-                'phone': phone,
-                'email': email,
-                'next': next_url
+                'full_name': full_name, 'phone': phone, 'email': email, 'next': next_url
             })
 
-        # 2. Password Confirmation Check
         if password != confirm_password:
             messages.error(request, "Passwords do not match. Please try again.")
             return render(request, 'register.html', {
-                'full_name': full_name,
-                'phone': phone,
-                'email': email,
-                'next': next_url
+                'full_name': full_name, 'phone': phone, 'email': email, 'next': next_url
             })
 
         if len(password) < 6:
             messages.error(request, "Password must be at least 6 characters long.")
             return render(request, 'register.html', {
-                'full_name': full_name,
-                'phone': phone,
-                'email': email,
-                'next': next_url
+                'full_name': full_name, 'phone': phone, 'email': email, 'next': next_url
             })
 
-        # 3. Check for existing username or phone number in DB
         username_exists = User.objects.filter(username=phone).exists()
         phone_exists = hasattr(User, 'phone') and User.objects.filter(phone=phone).exists()
 
@@ -105,7 +90,6 @@ def register(request):
             messages.info(request, "An account with this mobile number is already registered. Please sign in.")
             return redirect(f"/login/?next={next_url}")
 
-        # 4. Create User Record
         try:
             user = User.objects.create_user(
                 username=phone,
@@ -117,15 +101,12 @@ def register(request):
             if hasattr(user, 'role'):
                 user.role = 'customer'
 
-            # Save full name
             name_parts = full_name.split(' ', 1)
             user.first_name = name_parts[0]
             if len(name_parts) > 1:
                 user.last_name = name_parts[1]
 
             user.save()
-
-            # Automatically log in the new user
             login(request, user)
             messages.success(request, f"Welcome to CnC Supermarket, {user.first_name or user.username}!")
             return redirect(next_url if next_url != 'home' else 'home')
@@ -133,25 +114,15 @@ def register(request):
         except Exception as e:
             messages.error(request, f"Registration error: {str(e)}")
             return render(request, 'register.html', {
-                'full_name': full_name,
-                'phone': phone,
-                'email': email,
-                'next': next_url
+                'full_name': full_name, 'phone': phone, 'email': email, 'next': next_url
             })
 
     return render(request, 'register.html', {'next': next_url})
 
-import re
-from django.contrib.auth import get_user_model, authenticate, login, logout
-from django.contrib import messages
-from django.shortcuts import render, redirect
-from django.db.models import Q
-
-User = get_user_model()
 
 def login_view(request):
     if request.user.is_authenticated:
-        if request.user.is_staff or request.user.is_superuser:
+        if is_staff_check(request.user):
             return redirect('dashboard')
         return redirect('profile')
 
@@ -167,7 +138,7 @@ def login_view(request):
             messages.success(request, f"Welcome back, {user.first_name or user.username}!")
             if next_url and next_url != 'home':
                 return redirect(next_url)
-            if user.is_staff or user.is_superuser:
+            if is_staff_check(user):
                 return redirect('dashboard')
             return redirect('home')
         else:
@@ -176,37 +147,26 @@ def login_view(request):
     return render(request, 'registration/login.html', {'next': next_url})
 
 
-# Define alias for any URL pattern using user_login
 user_login = login_view
 
 
 def logout_view(request):
-    """User sign-out view."""
     logout(request)
     messages.info(request, "You have been logged out successfully.")
     return redirect('home')
 
-# Define alias for any URL pattern using user_logout
+
 user_logout = logout_view
 
-
-
-def user_logout(request):
-    """Log out customer and redirect to home."""
-    logout(request)
-    messages.info(request, "You have been logged out successfully.")
-    return redirect('home')
 
 # ==========================================
 # PUBLIC / STOREFRONT VIEWS
 # ==========================================
-# In store/views.py
 
 def home(request):
-    """Storefront homepage with clean integer cart mapping."""
     categories = Category.objects.filter(parent_category__isnull=True)[:8]
     products = Product.objects.all()[:8]
-    
+
     cart = request.session.get('cart', {})
     cart_quantities = {}
 
@@ -223,186 +183,40 @@ def home(request):
     })
 
 
+def category_list(request):
+    categories = Category.objects.all().order_by('name')
+    return render(request, 'category_list.html', {'categories': categories})
+
+
+def category_detail(request, category_id):
+    category = get_object_or_404(Category, id=category_id)
+    products = Product.objects.filter(category=category)
+    return render(request, 'category_detail.html', {
+        'category': category,
+        'products': products
+    })
+
 
 def product_list(request):
-    """View all available products."""
     products = Product.objects.all()
     return render(request, 'product_list.html', {'products': products})
 
 
 def product_detail(request, pk):
-    """View single product details."""
     product = get_object_or_404(Product, pk=pk)
     return render(request, 'product_detail.html', {'product': product})
 
 
-# In store/views.py
-
-@login_required
-def refund_request(request):
-    """Customer view: Submit a refund/return request with mandatory media proof."""
-    user_orders = Order.objects.filter(user=request.user).order_by('-created_at')
-
-    if request.method == 'POST':
-        order_id = request.POST.get('order_id')
-        reason = request.POST.get('reason')
-        description = request.POST.get('description', '').strip()
-        proof_file = request.FILES.get('proof_file')
-
-        if not order_id or not description:
-            messages.error(request, "Please select an order and provide a detailed reason.")
-            return redirect('refund')
-
-        if not proof_file:
-            messages.error(request, "Please upload an image or video proof for verification.")
-            return redirect('refund')
-
-        order = get_object_or_404(Order, pk=order_id, user=request.user)
-
-        # Create refund request ticket with attached proof
-        RefundRequest.objects.create(
-            user=request.user,
-            order=order,
-            reason=reason,
-            description=description,
-            proof_file=proof_file,
-            amount_requested=order.total_amount,
-            status='pending'
-        )
-
-        messages.success(request, f"Refund request for Order #{order.id} submitted! Our team will inspect the proof and update you shortly.")
-        return redirect('profile')
-
-    my_refunds = RefundRequest.objects.filter(user=request.user).order_by('-created_at')
-
-    return render(request, 'refund.html', {
-        'orders': user_orders,
-        'my_refunds': my_refunds
-    })
-
-@login_required
-def manage_refunds(request):
-    """Staff/Admin view: Review, inspect media proof, and update refund tickets."""
-    user = request.user
-    user_role = getattr(user, 'role', 'customer')
-    if user_role == 'customer' and not (user.is_staff or user.is_superuser):
-        raise PermissionDenied
-
-    if request.method == 'POST':
-        refund_id = request.POST.get('refund_id')
-        new_status = request.POST.get('status')
-        admin_notes = request.POST.get('admin_notes', '').strip()
-
-        refund_obj = get_object_or_404(RefundRequest, pk=refund_id)
-        refund_obj.status = new_status
-        if admin_notes:
-            refund_obj.admin_notes = admin_notes
-        refund_obj.save()
-
-        messages.success(request, f"Refund #{refund_obj.id} status updated to {new_status.title()}.")
-        return redirect('manage_refunds')
-
-    refund_tickets = RefundRequest.objects.select_related('user', 'order').all().order_by('-created_at')
-    return render(request, 'manage_refunds.html', {'refund_tickets': refund_tickets})
-
-
-def contact(request):
-    """Contact & support page."""
-    if request.method == 'POST':
-        messages.success(request, "Thank you for reaching out! Our team will get back to you shortly.")
-        return redirect('contact')
-    return render(request, 'contact.html')
-
-# In store/views.py
-
-@login_required
-def profile(request):
-    """Customer account dashboard, saved addresses, and past order history."""
-    addresses = Address.objects.filter(user=request.user)
-    # Fetch all past orders for the logged-in customer, latest first
-    orders = Order.objects.filter(user=request.user).prefetch_related('items__product').order_by('-created_at')
-
-    if request.method == 'POST':
-        # Update contact information
-        if 'phone' in request.POST:
-            request.user.phone = request.POST.get('phone', '').strip()
-            request.user.email = request.POST.get('email', '').strip()
-            request.user.save()
-            messages.success(request, "Profile contact details updated successfully.")
-        
-        # Add a new saved address
-        elif 'line1' in request.POST:
-            line1 = request.POST.get('line1', '').strip()
-            landmark = request.POST.get('landmark', '').strip()
-            pincode = request.POST.get('pincode', '').strip()
-
-            if line1 and pincode:
-                Address.objects.create(
-                    user=request.user,
-                    line1=line1,
-                    landmark=landmark or None,
-                    pincode=pincode
-                )
-                messages.success(request, "New address saved successfully.")
-            else:
-                messages.error(request, "Please enter all required address fields.")
-                
-        return redirect('profile')
-
-    context = {
-        'addresses': addresses,
-        'orders': orders,
-    }
-    return render(request, 'profile.html', context)
-
-
-@login_required
-def order_detail(request, order_id):
-    """View full receipt details of a specific past order."""
-    order = get_object_or_404(Order, pk=order_id, user=request.user)
-    order_items = OrderItem.objects.select_related('product').filter(order=order)
-
-    return render(request, 'order_detail.html', {
-        'order': order,
-        'order_items': order_items
-    })
-
-def privacy_policy(request):
-    return render(request, 'privacy_policy.html')
-
-
-def terms_and_conditions(request):
-    return render(request, 'terms_and_conditions.html')
-
-
-def refunds_policy(request):
-    return render(request, 'refunds.html')
-
-
-def returns_policy(request):
-    return render(request, 'returns.html')
-
-
-def shipping_policy(request):
-    return render(request, 'shipping_policy.html')
-
-
-def about_us(request):
-    return render(request, 'about_us.html')
-
-
 # ==========================================
-# CART HELPER FUNCTIONS & API VIEWS
+# CART & CHECKOUT
 # ==========================================
 
 def _get_cart(request):
-    """Retrieve session cart."""
     return request.session.get('cart', {})
 
 
 @require_POST
 def add_to_cart(request):
-    """Add product to session cart via Form POST."""
     product_id = request.POST.get('product_id')
     try:
         quantity = int(request.POST.get('quantity', 1))
@@ -413,25 +227,21 @@ def add_to_cart(request):
         return JsonResponse({'status': 'error', 'message': 'Missing product ID'}, status=400)
 
     cart = request.session.get('cart', {})
-    product_id_str = str(product_id)
+    pid = str(product_id)
 
-    if product_id_str in cart:
-        cart[product_id_str]['quantity'] += quantity
+    if pid in cart:
+        cart[pid]['quantity'] += quantity
     else:
-        cart[product_id_str] = {'quantity': quantity}
+        cart[pid] = {'quantity': quantity}
 
     request.session['cart'] = cart
     request.session.modified = True
 
     total_count = sum(item['quantity'] for item in cart.values())
+    return JsonResponse({'status': 'success', 'cart_count': total_count})
 
-    return JsonResponse({
-        'status': 'success',
-        'cart_count': total_count
-    })
 
 def update_cart_quantity(request):
-    """Interactive endpoint to update or remove item in session cart."""
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
@@ -472,25 +282,17 @@ def update_cart_quantity(request):
         )
         product_qty = cart.get(product_id, {}).get('quantity', 0) if product_id in cart else 0
 
-        return JsonResponse({
-            'status': 'success',
-            'cart_count': total_items,
-            'product_qty': product_qty
-        })
+        return JsonResponse({'status': 'success', 'cart_count': total_items, 'product_qty': product_qty})
 
     return JsonResponse({'status': 'error'}, status=400)
 
 
-# In store/views.py
-
 def cart(request):
-    """Shopping cart view calculating subtotal, delivery fee, and grand total."""
     session_cart = request.session.get('cart', {})
     cart_items = []
     subtotal = 0
 
     if isinstance(session_cart, dict) and session_cart:
-        # Extract integer product IDs from session keys
         product_ids = [int(pid) for pid in session_cart.keys() if str(pid).isdigit()]
         products = Product.objects.filter(id__in=product_ids)
         product_map = {p.id: p for p in products}
@@ -501,17 +303,11 @@ def cart(request):
             pid = int(pid_str)
             if pid in product_map:
                 product = product_map[pid]
-                
-                # Support both dict {'quantity': X} and direct int formats
-                if isinstance(item, dict):
-                    qty = int(item.get('quantity', 0))
-                else:
-                    qty = int(item) if str(item).isdigit() else 0
+                qty = int(item.get('quantity', 0)) if isinstance(item, dict) else (int(item) if str(item).isdigit() else 0)
 
                 if qty <= 0:
                     continue
 
-                # Use discounted price if available, else regular price
                 unit_price = product.discounted_price if product.discounted_price else product.price
                 item_total = unit_price * qty
                 subtotal += item_total
@@ -523,47 +319,30 @@ def cart(request):
                     'total_price': item_total,
                 })
 
-    # Free delivery above ₹100, otherwise ₹29
     delivery_fee = 29 if (0 < subtotal < 100) else 0
     grand_total = subtotal + delivery_fee
 
-    context = {
+    return render(request, 'cart.html', {
         'cart_items': cart_items,
         'subtotal': subtotal,
         'delivery_fee': delivery_fee,
         'grand_total': grand_total,
-    }
-    return render(request, 'cart.html', context)
+    })
 
 
 def clear_cart(request):
-    """Helper view to flush the cart session."""
     request.session['cart'] = {}
     request.session.modified = True
     return redirect('cart')
 
-# ==========================================
-# CHECKOUT & ORDER PLACEMENT
-# ==========================================
-# In store/views.py
-
-# In store/views.py
-
-# In store/views.py
 
 @login_required
 def checkout(request):
-    """
-    Checkout view:
-    - Enforces mandatory phone number and updates user profile.
-    - Handles picking a saved address OR adding a new one via `selected_address`.
-    """
     session_cart = request.session.get('cart', {})
     if not session_cart:
         messages.warning(request, "Your cart is empty. Please add items before checking out.")
         return redirect('product_list')
 
-    # Fetch product records from database
     valid_pids = [int(pid) for pid in session_cart.keys() if str(pid).isdigit()]
     products = Product.objects.filter(id__in=valid_pids)
     product_map = {p.id: p for p in products}
@@ -607,24 +386,17 @@ def checkout(request):
         payment_method = request.POST.get('payment_method', 'COD')
         delivery_mode = request.POST.get('delivery_mode', 'instant')
 
-        # 1. MANDATORY PHONE NUMBER VALIDATION
         if not phone:
             messages.error(request, "Phone number is compulsory to proceed with checkout.")
             return redirect('checkout')
 
-        # Update User Profile with Phone & Email
-        user_updated = False
         if request.user.phone != phone:
             request.user.phone = phone
-            user_updated = True
+            request.user.save()
         if email and request.user.email != email:
             request.user.email = email
-            user_updated = True
-        if user_updated:
             request.user.save()
 
-        # 2. ADDRESS RESOLUTION
-        address = None
         if selected_address and selected_address != 'new' and selected_address.isdigit():
             address = get_object_or_404(Address, pk=int(selected_address), user=request.user)
         else:
@@ -643,7 +415,6 @@ def checkout(request):
                 pincode=pincode
             )
 
-        # 3. CREATE ORDER RECORD
         order = Order.objects.create(
             user=request.user,
             address=address,
@@ -655,7 +426,6 @@ def checkout(request):
             order_status='pending_acceptance'
         )
 
-        # 4. CREATE ORDER ITEMS
         for item in cart_items:
             OrderItem.objects.create(
                 order=order,
@@ -665,104 +435,156 @@ def checkout(request):
                 total_price=item['total_price']
             )
 
-        # 5. CLEAR SESSION CART
         request.session['cart'] = {}
         request.session.modified = True
 
         messages.success(request, f"Order #{order.id} placed successfully!")
         return redirect('order_success', order_id=order.id)
 
-    context = {
+    return render(request, 'checkout.html', {
         'cart_items': cart_items,
         'subtotal': subtotal,
         'delivery_fee': delivery_fee,
         'grand_total': grand_total,
         'addresses': user_addresses,
-    }
-    return render(request, 'checkout.html', context)
+    })
 
 
 @login_required
 def order_success(request, order_id):
-    """Order confirmation and receipt page."""
     order = get_object_or_404(Order, pk=order_id, user=request.user)
     order_items = OrderItem.objects.select_related('product').filter(order=order)
+    return render(request, 'order_success.html', {'order': order, 'order_items': order_items})
 
-    return render(request, 'order_success.html', {
-        'order': order,
-        'order_items': order_items
-    })
 
+@login_required
+def profile(request):
+    addresses = Address.objects.filter(user=request.user)
+    orders = Order.objects.filter(user=request.user).prefetch_related('items__product').order_by('-created_at')
+
+    if request.method == 'POST':
+        if 'phone' in request.POST:
+            request.user.phone = request.POST.get('phone', '').strip()
+            request.user.email = request.POST.get('email', '').strip()
+            request.user.save()
+            messages.success(request, "Profile contact details updated successfully.")
+
+        elif 'line1' in request.POST:
+            line1 = request.POST.get('line1', '').strip()
+            landmark = request.POST.get('landmark', '').strip()
+            pincode = request.POST.get('pincode', '').strip()
+
+            if line1 and pincode:
+                Address.objects.create(
+                    user=request.user,
+                    line1=line1,
+                    landmark=landmark or None,
+                    pincode=pincode
+                )
+                messages.success(request, "New address saved successfully.")
+            else:
+                messages.error(request, "Please enter all required address fields.")
+
+        return redirect('profile')
+
+    return render(request, 'profile.html', {'addresses': addresses, 'orders': orders})
+
+
+@login_required
+def order_detail(request, order_id):
+    order = get_object_or_404(Order, pk=order_id, user=request.user)
+    order_items = OrderItem.objects.select_related('product').filter(order=order)
+    return render(request, 'order_detail.html', {'order': order, 'order_items': order_items})
+
+
+@login_required
+def refund_request(request):
+    user_orders = Order.objects.filter(user=request.user).order_by('-created_at')
+
+    if request.method == 'POST':
+        order_id = request.POST.get('order_id')
+        reason = request.POST.get('reason')
+        description = request.POST.get('description', '').strip()
+        proof_file = request.FILES.get('proof_file')
+
+        if not order_id or not description:
+            messages.error(request, "Please select an order and provide a detailed reason.")
+            return redirect('refund')
+
+        if not proof_file:
+            messages.error(request, "Please upload an image or video proof for verification.")
+            return redirect('refund')
+
+        order = get_object_or_404(Order, pk=order_id, user=request.user)
+
+        RefundRequest.objects.create(
+            user=request.user,
+            order=order,
+            reason=reason,
+            description=description,
+            proof_file=proof_file,
+            amount_requested=order.total_amount,
+            status='pending'
+        )
+
+        messages.success(request, f"Refund request for Order #{order.id} submitted!")
+        return redirect('profile')
+
+    my_refunds = RefundRequest.objects.filter(user=request.user).order_by('-created_at')
+    return render(request, 'refund.html', {'orders': user_orders, 'my_refunds': my_refunds})
+
+
+# Static Informational Pages
+def contact(request):
+    if request.method == 'POST':
+        messages.success(request, "Thank you for reaching out! Our team will get back to you shortly.")
+        return redirect('contact')
+    return render(request, 'contact.html')
+
+def privacy_policy(request): return render(request, 'privacy_policy.html')
+def terms_and_conditions(request): return render(request, 'terms_and_conditions.html')
+def refunds_policy(request): return render(request, 'refunds.html')
+def returns_policy(request): return render(request, 'returns.html')
+def shipping_policy(request): return render(request, 'shipping_policy.html')
+def about_us(request): return render(request, 'about_us.html')
 
 
 # ==========================================
-# INTERNAL MANAGEMENT VIEWS
+# INTERNAL DASHBOARD & OPERATIONS
 # ==========================================
-# In store/views.py
-# In store/views.py
-
-def is_staff_check(user):
-    return user.is_authenticated and (user.is_staff or user.is_superuser)
 
 @user_passes_test(is_staff_check, login_url='/accounts/login/')
 def dashboard(request):
-    # 1. Order Status Counts
     pending_orders_count = Order.objects.filter(order_status='pending_acceptance').count()
     active_orders_count = Order.objects.filter(
         order_status__in=['accepted', 'packing', 'out_for_delivery']
     ).count()
-    
-    # Check refund claim count safely if model exists, otherwise 0
+
     pending_refunds_count = 0
     try:
-        from .models import Refund
-        pending_refunds_count = Refund.objects.filter(status='pending').count()
+        pending_refunds_count = RefundRequest.objects.filter(status='pending').count()
     except Exception:
         pass
 
-    # 2. Inventory / Low Stock calculations
     try:
-        low_stock_count = Product.objects.filter(inventory__quantity__lt=10).count()
-        low_stock_items = Product.objects.filter(inventory__quantity__lt=10).select_related('inventory')[:6]
+        low_stock_count = Product.objects.filter(inventory__available_quantity__lt=10).count()
+        low_stock_items = Product.objects.filter(inventory__available_quantity__lt=10).select_related('inventory')[:6]
     except Exception:
         low_stock_count = 0
         low_stock_items = []
 
-    # 3. Recent Orders
     recent_orders = Order.objects.select_related('user', 'address').prefetch_related('items').order_by('-id')[:10]
 
-    context = {
+    return render(request, 'dashboard.html', {
         'pending_orders_count': pending_orders_count,
         'active_orders_count': active_orders_count,
         'pending_refunds_count': pending_refunds_count,
         'low_stock_count': low_stock_count,
         'recent_orders': recent_orders,
         'low_stock_items': low_stock_items,
-    }
-    return render(request, 'dashboard.html', context)
-
-def is_staff_check(user):
-    """Checks if the user is authenticated and is a staff member or superuser."""
-    return user.is_authenticated and (user.is_staff or user.is_superuser)
-
-
-# 1. Customer-Facing Category Views (Resolves NoReverseMatch on homepage)
-def category_list(request):
-    categories = Category.objects.all().order_by('name')
-    return render(request, 'category_list.html', {'categories': categories})
-
-
-def category_detail(request, category_id):
-    category = get_object_or_404(Category, id=category_id)
-    # Filter products belonging to this category
-    products = Product.objects.filter(category=category)
-    return render(request, 'category_detail.html', {
-        'category': category,
-        'products': products
     })
 
 
-# 2. Staff Management Category Views (Resolves AttributeError in urls.py)
 @user_passes_test(is_staff_check, login_url='/accounts/login/')
 def manage_categories(request):
     categories = Category.objects.all().order_by('name')
@@ -789,13 +611,13 @@ def add_category(request):
                 name=name,
                 parent_category=parent if hasattr(Category, 'parent_category') else None
             )
-
             if image:
                 category.image = image
             if image_url and hasattr(category, 'image_url'):
                 category.image_url = image_url
 
             category.save()
+            messages.success(request, f"Category '{name}' created successfully!")
             return redirect('manage_categories')
 
     categories = Category.objects.all().order_by('name')
@@ -817,6 +639,7 @@ def edit_category(request, category_id):
             if image_url and hasattr(category, 'image_url'):
                 category.image_url = image_url
             category.save()
+            messages.success(request, f"Category '{name}' updated successfully!")
             return redirect('manage_categories')
 
     return render(request, 'edit_category.html', {'category': category})
@@ -827,83 +650,33 @@ def delete_category(request, category_id):
     category = get_object_or_404(Category, id=category_id)
     if request.method == 'POST':
         category.delete()
+        messages.success(request, "Category deleted.")
     return redirect('manage_categories')
 
 
-@login_required
-def live_orders(request):
-    """Dedicated live order management screen with quick status transitions."""
-    user = request.user
-    user_role = getattr(user, 'role', 'customer')
-
-    if user_role == 'customer' and not (user.is_staff or user.is_superuser):
-        raise PermissionDenied
-
-    if request.method == 'POST':
-        order_id = request.POST.get('order_id')
-        new_status = request.POST.get('order_status')
-        
-        order = get_object_or_404(Order, pk=order_id)
-        order.order_status = new_status
-        
-        if new_status == 'accepted' and not order.accepted_by:
-            order.accepted_by = request.user
-            
-        order.save()
-        messages.success(request, f"Order #{order.id} status updated to {new_status.replace('_', ' ').title()}.")
-        return redirect('live_orders')
-
-    orders = Order.objects.select_related('user', 'address').prefetch_related('items__product').all().order_by('-created_at')
-    return render(request, 'live_orders.html', {'orders': orders})
-
-@login_required
-def add_category(request):
-    """View to add new category."""
-    if request.user.role not in ['manager', 'admin', 'owner'] and not request.user.is_superuser:
-        raise PermissionDenied
-
-    if request.method == 'POST':
-        name = request.POST.get('name')
-        parent_id = request.POST.get('parent_category')
-        parent_cat = Category.objects.filter(pk=parent_id).first() if parent_id else None
-
-        Category.objects.create(
-            name=name,
-            parent_category=parent_cat,
-            image=request.FILES.get('image'),
-            image_url=request.POST.get('image_url') or None
-        )
-        messages.success(request, f"Category '{name}' created successfully!")
-        return redirect('category_list')
-
-    categories = Category.objects.all()
-    return render(request, 'add_category.html', {'categories': categories})
-
-
-@login_required
+@user_passes_test(is_admin_or_manager, login_url='/accounts/login/')
 def add_product(request):
-    """View to add new product and initialize stock."""
-    if request.user.role not in ['manager', 'admin', 'owner'] and not request.user.is_superuser:
-        raise PermissionDenied
-
     if request.method == 'POST':
         category_id = request.POST.get('category')
         category = get_object_or_404(Category, pk=category_id)
-        
+
         product = Product.objects.create(
             category=category,
             name=request.POST.get('name'),
             brand=request.POST.get('brand') or None,
-            unit=request.POST.get('unit'),
+            unit=request.POST.get('unit', '1 unit'),
             price=request.POST.get('price'),
             discounted_price=request.POST.get('discounted_price') or None,
             image=request.FILES.get('image'),
             image_url=request.POST.get('image_url') or None,
             description=request.POST.get('description') or None
         )
-        
+
         initial_stock = int(request.POST.get('initial_stock', 0))
-        Inventory.objects.create(product=product, available_quantity=initial_stock)
+        Inventory.objects.update_or_create(
+            product=product,
+            defaults={'available_quantity': initial_stock}
+        )
 
         messages.success(request, f"Product '{product.name}' added successfully!")
         return redirect('product_list')
@@ -912,12 +685,8 @@ def add_product(request):
     return render(request, 'add_product.html', {'categories': categories})
 
 
-@login_required
+@user_passes_test(is_admin_or_manager, login_url='/accounts/login/')
 def manage_inventory(request):
-    """View and update product stock levels."""
-    if request.user.role not in ['manager', 'admin', 'owner'] and not request.user.is_superuser:
-        raise PermissionDenied
-
     if request.method == 'POST':
         product_id = request.POST.get('product_id')
         quantity = request.POST.get('quantity')
@@ -931,12 +700,8 @@ def manage_inventory(request):
     return render(request, 'manage_inventory.html', {'inventory_items': inventory_items})
 
 
-@login_required
+@user_passes_test(is_admin_or_manager, login_url='/accounts/login/')
 def manage_prices(request):
-    """Manage product prices and discounts."""
-    if request.user.role not in ['manager', 'admin', 'owner'] and not request.user.is_superuser:
-        raise PermissionDenied
-
     if request.method == 'POST':
         product_id = request.POST.get('product_id')
         price = request.POST.get('price')
@@ -953,12 +718,8 @@ def manage_prices(request):
     return render(request, 'manage_prices.html', {'products': products})
 
 
-@login_required
+@user_passes_test(is_admin_or_manager, login_url='/accounts/login/')
 def manage_coupons(request):
-    """Create and view promotional coupons."""
-    if request.user.role not in ['manager', 'admin', 'owner'] and not request.user.is_superuser:
-        raise PermissionDenied
-
     if request.method == 'POST':
         Coupon.objects.create(
             code=request.POST.get('code').upper(),
@@ -975,9 +736,13 @@ def manage_coupons(request):
     return render(request, 'manage_coupons.html', {'coupons': coupons})
 
 
-@login_required
+# ==========================================
+# BULK IMPORT ENGINE (CSV & EXCEL)
+# ==========================================
+
+@user_passes_test(is_admin_or_manager, login_url='/accounts/login/')
 def bulk_import(request):
-    """View to upload CSV/Excel files and parse product data."""
+    """Upload CSV or Excel files to mass create/update catalog items and inventory."""
     if request.method == 'POST':
         uploaded_file = request.FILES.get('file')
         file_url = request.POST.get('file_url')
@@ -1016,8 +781,8 @@ def bulk_import(request):
 
             for _, row in df.iterrows():
                 try:
-                    category_name = str(row.get('category_name', '')).strip()
-                    product_name = str(row.get('product_name', '')).strip()
+                    category_name = str(row.get('category_name') or row.get('category') or '').strip()
+                    product_name = str(row.get('product_name') or row.get('name') or '').strip()
 
                     if not category_name or not product_name:
                         errors += 1
@@ -1026,8 +791,10 @@ def bulk_import(request):
                     category, _ = Category.objects.get_or_create(name=category_name)
 
                     price = float(row.get('price', 0))
-                    discounted_price = float(row.get('discounted_price')) if pd.notna(row.get('discounted_price')) and row.get('discounted_price') != '' else None
-                    stock_qty = int(row.get('available_quantity', 0)) if pd.notna(row.get('available_quantity')) else 0
+                    disc_raw = row.get('discounted_price')
+                    discounted_price = float(disc_raw) if pd.notna(disc_raw) and str(disc_raw).strip() != '' else None
+                    stock_raw = row.get('available_quantity') or row.get('stock') or row.get('quantity')
+                    stock_qty = int(stock_raw) if pd.notna(stock_raw) else 0
 
                     product, _ = Product.objects.update_or_create(
                         name=product_name,
@@ -1046,22 +813,21 @@ def bulk_import(request):
                         product=product,
                         defaults={'available_quantity': stock_qty}
                     )
-
                     success += 1
 
                 except Exception:
                     errors += 1
 
-            job.status = 'completed' if errors == 0 else 'failed' if success == 0 else 'completed'
+            job.status = 'completed' if errors == 0 else ('failed' if success == 0 else 'completed')
             job.success_count = success
             job.error_count = errors
             job.save()
 
-            messages.success(request, f"Import finished! {success} products added/updated, {errors} errors.")
+            messages.success(request, f"Import complete! {success} products added/updated, {errors} errors.")
 
         except Exception as e:
             job.status = 'failed'
-            job.error_count = job.total_rows if job.total_rows > 0 else 1
+            job.error_count = getattr(job, 'total_rows', 1)
             job.save()
             messages.error(request, f"Failed to process file: {str(e)}")
 
@@ -1073,7 +839,7 @@ def bulk_import(request):
 
 @login_required
 def download_sample_import(request):
-    """Generates and serves a sample CSV file for bulk product uploads."""
+    """Generates a sample CSV template for bulk uploads."""
     response = HttpResponse(content_type='text/csv')
     response['Content-Disposition'] = 'attachment; filename="cnc_product_import_sample.csv"'
 
@@ -1085,50 +851,26 @@ def download_sample_import(request):
     return response
 
 
-@login_required
-def manage_staff(request):
-    """View and reassign staff user roles."""
-    if request.user.role not in ['admin', 'owner'] and not request.user.is_superuser:
-        raise PermissionDenied
-
-    if request.method == 'POST':
-        user_id = request.POST.get('user_id')
-        new_role = request.POST.get('role')
-        staff_user = get_object_or_404(User, pk=user_id)
-        staff_user.role = new_role
-        staff_user.save()
-        messages.success(request, f"Role for {staff_user.username} updated to {new_role}.")
-        return redirect('manage_staff')
-
-    staff_users = User.objects.all().order_by('username')
-    return render(request, 'manage_staff.html', {'staff_users': staff_users})
-
-
-@login_required
+@user_passes_test(is_admin_or_manager, login_url='/accounts/login/')
 def live_orders(request):
-    """Monitor active orders and update order status."""
-    if request.user.role not in ['employee', 'manager', 'admin', 'owner'] and not request.user.is_superuser:
-        raise PermissionDenied
-
     if request.method == 'POST':
         order_id = request.POST.get('order_id')
         new_status = request.POST.get('order_status')
+
         order = get_object_or_404(Order, pk=order_id)
         order.order_status = new_status
+        if new_status == 'accepted' and hasattr(order, 'accepted_by') and not order.accepted_by:
+            order.accepted_by = request.user
         order.save()
         messages.success(request, f"Order #{order.id} status changed to {new_status}.")
         return redirect('live_orders')
 
-    orders = Order.objects.select_related('user', 'address').all().order_by('-created_at')[:20]
+    orders = Order.objects.select_related('user', 'address').prefetch_related('items__product').all().order_by('-created_at')[:20]
     return render(request, 'live_orders.html', {'orders': orders})
 
 
-@login_required
+@user_passes_test(is_staff_check, login_url='/accounts/login/')
 def item_picking(request):
-    """Order item fulfillment and stock status updates."""
-    if request.user.role not in ['employee', 'manager', 'admin', 'owner'] and not request.user.is_superuser:
-        raise PermissionDenied
-
     if request.method == 'POST':
         item_id = request.POST.get('item_id')
         action = request.POST.get('action')
@@ -1147,12 +889,45 @@ def item_picking(request):
     return render(request, 'item_picking.html', {'order_items': order_items})
 
 
-@login_required
-def store_settings(request):
-    """Configure store operating hours and cutoff thresholds."""
-    if request.user.role not in ['admin', 'owner'] and not request.user.is_superuser:
-        raise PermissionDenied
+@user_passes_test(is_admin_or_manager, login_url='/accounts/login/')
+def manage_refunds(request):
+    if request.method == 'POST':
+        refund_id = request.POST.get('refund_id')
+        new_status = request.POST.get('status')
+        admin_notes = request.POST.get('admin_notes', '').strip()
 
+        refund_obj = get_object_or_404(RefundRequest, pk=refund_id)
+        refund_obj.status = new_status
+        if admin_notes:
+            refund_obj.admin_notes = admin_notes
+        refund_obj.save()
+
+        messages.success(request, f"Refund #{refund_obj.id} status updated to {new_status.title()}.")
+        return redirect('manage_refunds')
+
+    refund_tickets = RefundRequest.objects.select_related('user', 'order').all().order_by('-created_at')
+    return render(request, 'manage_refunds.html', {'refund_tickets': refund_tickets})
+
+
+@user_passes_test(is_admin_or_manager, login_url='/accounts/login/')
+def manage_staff(request):
+    if request.method == 'POST':
+        user_id = request.POST.get('user_id')
+        new_role = request.POST.get('role')
+        staff_user = get_object_or_404(User, pk=user_id)
+        staff_user.role = new_role
+        if new_role in ['admin', 'manager', 'owner']:
+            staff_user.is_staff = True
+        staff_user.save()
+        messages.success(request, f"Role for {staff_user.username} updated to {new_role}.")
+        return redirect('manage_staff')
+
+    staff_users = User.objects.all().order_by('username')
+    return render(request, 'manage_staff.html', {'staff_users': staff_users})
+
+
+@user_passes_test(is_admin_or_manager, login_url='/accounts/login/')
+def store_settings(request):
     settings_obj = StoreSettings.objects.first()
 
     if request.method == 'POST':
@@ -1169,28 +944,10 @@ def store_settings(request):
     return render(request, 'store_settings.html', {'settings': settings_obj})
 
 
-@login_required
+@user_passes_test(is_admin_or_manager, login_url='/accounts/login/')
 def audit_logs(request):
-    """Security audit log trail."""
-    if request.user.role not in ['admin', 'owner'] and not request.user.is_superuser:
-        raise PermissionDenied
-
     logs = AuditLog.objects.select_related('user').all().order_by('-created_at')[:50]
     return render(request, 'audit_logs.html', {'audit_logs': logs})
-
-from django.contrib.auth.decorators import login_required, user_passes_test
-
-def is_admin_or_manager(user):
-    return user.is_authenticated and (user.is_superuser or user.is_staff or getattr(user, 'role', None) in ['admin', 'manager'])
-
-@login_required
-@user_passes_test(is_admin_or_manager)
-def staff_management(request):
-    """View to manage staff members and roles."""
-    staff_members = User.objects.filter(is_staff=True) | User.objects.exclude(role='customer') if hasattr(User, 'role') else User.objects.filter(is_staff=True)
-    return render(request, 'store/staff_management.html', {
-        'staff_members': staff_members.distinct()
-    })
 
 
 
