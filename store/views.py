@@ -742,7 +742,7 @@ def manage_coupons(request):
 
 @user_passes_test(is_admin_or_manager, login_url='/accounts/login/')
 def bulk_import(request):
-    """Upload CSV or Excel files to mass create/update catalog items and inventory."""
+    """Upload CSV or Excel files with auto-encoding detection to mass create/update products."""
     if request.method == 'POST':
         uploaded_file = request.FILES.get('file')
         file_url = request.POST.get('file_url')
@@ -761,10 +761,21 @@ def bulk_import(request):
         errors = 0
 
         try:
+            # 1. Parse CSV / Excel safely with fallback encodings
             if uploaded_file:
                 file_name = uploaded_file.name.lower()
                 if file_name.endswith('.csv'):
-                    df = pd.read_csv(uploaded_file)
+                    file_bytes = uploaded_file.read()
+                    # Try common encodings used by Excel & Windows
+                    df = None
+                    for enc in ['utf-8-sig', 'utf-8', 'cp1252', 'latin1', 'iso-8859-1']:
+                        try:
+                            df = pd.read_csv(io.BytesIO(file_bytes), encoding=enc)
+                            break
+                        except (UnicodeDecodeError, UnicodeError):
+                            continue
+                    if df is None:
+                        raise ValueError("Could not decode CSV file. Please save as CSV (UTF-8).")
                 elif file_name.endswith(('.xlsx', '.xls')):
                     df = pd.read_excel(uploaded_file)
                 else:
@@ -772,13 +783,24 @@ def bulk_import(request):
             else:
                 resp = requests.get(file_url)
                 if file_url.lower().endswith('.csv'):
-                    df = pd.read_csv(io.StringIO(resp.text))
+                    content = resp.content
+                    df = None
+                    for enc in ['utf-8-sig', 'utf-8', 'cp1252', 'latin1', 'iso-8859-1']:
+                        try:
+                            df = pd.read_csv(io.BytesIO(content), encoding=enc)
+                            break
+                        except (UnicodeDecodeError, UnicodeError):
+                            continue
+                    if df is None:
+                        raise ValueError("Could not decode CSV from URL.")
                 else:
                     df = pd.read_excel(io.BytesIO(resp.content))
 
-            df.columns = df.columns.str.strip().str.lower()
+            # 2. Normalize column headers
+            df.columns = df.columns.astype(str).str.strip().str.lower()
             job.total_rows = len(df)
 
+            # 3. Process rows
             for _, row in df.iterrows():
                 try:
                     category_name = str(row.get('category_name') or row.get('category') or '').strip()
@@ -790,22 +812,26 @@ def bulk_import(request):
 
                     category, _ = Category.objects.get_or_create(name=category_name)
 
-                    price = float(row.get('price', 0))
+                    # Safe numeric conversions
+                    price_raw = row.get('price', 0)
+                    price = float(price_raw) if pd.notna(price_raw) and str(price_raw).strip() != '' else 0.0
+
                     disc_raw = row.get('discounted_price')
                     discounted_price = float(disc_raw) if pd.notna(disc_raw) and str(disc_raw).strip() != '' else None
+
                     stock_raw = row.get('available_quantity') or row.get('stock') or row.get('quantity')
-                    stock_qty = int(stock_raw) if pd.notna(stock_raw) else 0
+                    stock_qty = int(float(stock_raw)) if pd.notna(stock_raw) and str(stock_raw).strip() != '' else 0
 
                     product, _ = Product.objects.update_or_create(
                         name=product_name,
                         defaults={
                             'category': category,
-                            'brand': str(row.get('brand', '')) if pd.notna(row.get('brand')) else '',
-                            'unit': str(row.get('unit', '1 unit')) if pd.notna(row.get('unit')) else '1 unit',
+                            'brand': str(row.get('brand', '')).strip() if pd.notna(row.get('brand')) else '',
+                            'unit': str(row.get('unit', '1 unit')).strip() if pd.notna(row.get('unit')) else '1 unit',
                             'price': price,
                             'discounted_price': discounted_price,
-                            'image_url': str(row.get('image_url', '')) if pd.notna(row.get('image_url')) else '',
-                            'description': str(row.get('description', '')) if pd.notna(row.get('description')) else '',
+                            'image_url': str(row.get('image_url', '')).strip() if pd.notna(row.get('image_url')) else '',
+                            'description': str(row.get('description', '')).strip() if pd.notna(row.get('description')) else '',
                         }
                     )
 
@@ -835,7 +861,6 @@ def bulk_import(request):
 
     import_jobs = BulkImportJob.objects.all().order_by('-created_at')[:10]
     return render(request, 'bulk_import.html', {'import_jobs': import_jobs})
-
 
 @login_required
 def download_sample_import(request):
