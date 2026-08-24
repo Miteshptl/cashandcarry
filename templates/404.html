@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block title %}Page Not Found — CnC{% endblock %}
+
+{% block content %}
+<section class="section" style="padding: 80px 0; text-align: center; min-height: 65vh; display: flex; align-items: center;">
+  <div class="wrap" style="max-width: 540px; margin: 0 auto;">
+    <div style="font-size: 64px; margin-bottom: 12px;">🛒</div>
+    <span class="mono" style="font-size: 14px; color: var(--turmeric-dark, #e8a33d); font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;">Error 404</span>
+    <h1 class="display" style="font-size: 28px; font-weight: 700; margin: 8px 0 12px; color: var(--charcoal, #1e293b);">Aisle Not Found</h1>
+    <p style="font-size: 14px; color: var(--charcoal-soft, #64748b); line-height: 1.6; margin-bottom: 24px;">
+      The item, category, or page you were looking for doesn't exist or may have been moved.
+    </p>
+    <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+      <a href="{% url 'home' %}" class="btn btn-primary" style="padding: 10px 20px; font-size: 13px;">Return Home</a>
+      <a href="{% url 'product_list' %}" class="btn btn-secondary" style="padding: 10px 20px; font-size: 13px;">Browse Store</a>
+    </div>
+  </div>
+</section>
+{% endblock %}

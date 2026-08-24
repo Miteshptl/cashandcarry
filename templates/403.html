@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %}Access Denied — CnC{% endblock %}
+
+{% block content %}
+<section class="section" style="padding: 80px 0; text-align: center; min-height: 65vh; display: flex; align-items: center;">
+  <div class="wrap" style="max-width: 500px; margin: 0 auto;">
+    <div style="font-size: 56px; margin-bottom: 12px;">🔒</div>
+    <span class="mono" style="font-size: 13px; color: #dc2626; font-weight: 700; text-transform: uppercase;">Error 403</span>
+    <h1 class="display" style="font-size: 26px; font-weight: 700; margin: 8px 0 12px;">Access Restricted</h1>
+    <p style="font-size: 14px; color: var(--charcoal-soft, #64748b); line-height: 1.5; margin-bottom: 20px;">
+      You do not have staff or administrative permissions to access this management tool.
+    </p>
+    <a href="{% url 'home' %}" class="btn btn-primary" style="padding: 10px 20px; font-size: 13px;">Return to Storefront</a>
+  </div>
+</section>
+{% endblock %}
