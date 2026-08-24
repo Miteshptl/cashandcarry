@@ -14,7 +14,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # 1. SECURITY CONFIGURATION
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-cnc-supermarket-prod-key-2026')
 
-DEBUG = True
+DEBUG = False
 ALLOWED_HOSTS = ['.vercel.app', '127.0.0.1', 'localhost', '*']
 
 # Application definition
