@@ -740,9 +740,24 @@ def manage_coupons(request):
 # BULK IMPORT ENGINE (CSV & EXCEL)
 # ==========================================
 
+import re
+import unicodedata
+
+def clean_text_field(val):
+    """Deep-cleans string: strips whitespace, non-breaking spaces, and collapses multi-spaces."""
+    if val is None or pd.isna(val):
+        return ''
+    text = str(val)
+    # Normalize unicode (turns non-breaking space \xa0 into regular space)
+    text = unicodedata.normalize('NFKD', text)
+    # Collapse multiple spaces and trim
+    text = re.sub(r'\s+', ' ', text).strip()
+    return text
+
+
 @user_passes_test(is_admin_or_manager, login_url='/accounts/login/')
 def bulk_import(request):
-    """Upload CSV or Excel files with duplicate category/product handling."""
+    """Upload CSV or Excel files with fuzzy/normalized category and product matching."""
     if request.method == 'POST':
         uploaded_file = request.FILES.get('file')
         file_url = request.POST.get('file_url')
@@ -796,27 +811,40 @@ def bulk_import(request):
                 else:
                     df = pd.read_excel(io.BytesIO(resp.content))
 
-            # 2. Clean column headers
+            # 2. Normalize DataFrame column headers
             df.columns = df.columns.astype(str).str.strip().str.lower()
             job.total_rows = len(df)
 
-            # 3. Process rows safely
+            # 3. Cache existing categories into memory for instant normalized matching
+            all_existing_categories = list(Category.objects.all())
+
+            # 4. Process rows
             for idx, row in df.iterrows():
                 row_num = idx + 2
 
                 try:
-                    category_name = str(row.get('category_name') or row.get('category') or '').strip()
-                    product_name = str(row.get('product_name') or row.get('name') or row.get('title') or '').strip()
+                    raw_cat = row.get('category_name') or row.get('category')
+                    raw_prod = row.get('product_name') or row.get('name') or row.get('title')
+
+                    category_name = clean_text_field(raw_cat)
+                    product_name = clean_text_field(raw_prod)
 
                     if not category_name or not product_name:
                         errors += 1
                         error_details.append(f"Row {row_num}: Missing category or product name.")
                         continue
 
-                    # Safe Category lookup: gets the first matching category without throwing errors
-                    category = Category.objects.filter(name__iexact=category_name).first()
+                    # Match against existing categories (ignoring case, spaces, and punctuation)
+                    category = None
+                    for cat in all_existing_categories:
+                        if clean_text_field(cat.name).lower() == category_name.lower():
+                            category = cat
+                            break
+
+                    # If no match found in cache or DB, create new category and cache it
                     if not category:
                         category = Category.objects.create(name=category_name)
+                        all_existing_categories.append(category)
 
                     # Safe price parsing
                     price_raw = row.get('price', 0)
@@ -841,13 +869,16 @@ def bulk_import(request):
                         cleaned_stock = re.sub(r'[^\d]', '', str(stock_raw))
                         stock_qty = int(cleaned_stock) if cleaned_stock else 0
 
-                    brand = str(row.get('brand', '')).strip() if pd.notna(row.get('brand')) else ''
-                    unit = str(row.get('unit', '1 unit')).strip() if pd.notna(row.get('unit')) else '1 unit'
+                    brand = clean_text_field(row.get('brand'))
+                    unit = clean_text_field(row.get('unit')) or '1 unit'
                     image_url = str(row.get('image_url', '')).strip() if pd.notna(row.get('image_url')) else ''
                     description = str(row.get('description', '')).strip() if pd.notna(row.get('description')) else ''
 
-                    # Safe Product lookup
-                    product = Product.objects.filter(name__iexact=product_name).first()
+                    # Match product by clean normalized name under this category
+                    product = Product.objects.filter(
+                        name__iexact=product_name
+                    ).first()
+
                     if product:
                         product.category = category
                         product.brand = brand
@@ -894,7 +925,7 @@ def bulk_import(request):
             job.save()
 
             if success > 0:
-                messages.success(request, f"Import complete: {success} products added/updated successfully.")
+                messages.success(request, f"Import complete: {success} products added/updated into their categories.")
             if errors > 0:
                 sample_errors = " | ".join(error_details[:4])
                 messages.error(request, f"{errors} rows failed. Samples: {sample_errors}")
@@ -909,7 +940,6 @@ def bulk_import(request):
 
     import_jobs = BulkImportJob.objects.all().order_by('-created_at')[:10]
     return render(request, 'bulk_import.html', {'import_jobs': import_jobs})
-
 
 
 @login_required
